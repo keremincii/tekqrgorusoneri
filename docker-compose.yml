@@ -1,0 +1,234 @@
+# RAM tavanları KUTUYA göre .env'den ayarlanır (mem_limit REZERVASYON değil TAVANDIR;
+# container yalnız ihtiyaç kadarını kullanır). Varsayılanlar 4GB kutuya göre GÜVENLİ
+# seçildi (toplam ~2.3GB → OS + page-cache'e ~1.7GB kalır):
+#   app 1024m + db 768m + redis 384m + cloudflared 128m ≈ 2.3GB
+# 8GB kutuya geçersen .env'e şunları koy (daha rahat):
+#   APP_MEM_LIMIT=2560m  DB_MEM_LIMIT=1536m  REDIS_MEM_LIMIT=512m
+#
+# Ortak log rotasyonu: rotasyonsuz json-file sürücüsü sınırsız büyür (guvenlikOlayi
+# her reddedilen istekte satır basar) → disk dolunca Postgres WAL yazamaz, sistem çöker.
+x-log: &log-rotasyon
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+# ============================================================================
+# PROJE ADI — DOKUNMA, SİLME.
+# Compose proje adını normalde KLASÖR ADINDAN türetir. Bu satır olmasaydı ve klasör
+# bir şekilde başka bir ürünle aynı adı taşısaydı (`belediye`, `mezarlik`), buradaki
+# `docker compose up` O ÜRÜNÜN ÇALIŞAN KONTEYNERLERİNİ DEĞİŞTİRİRDİ. Ad sabitlenince
+# network ve volume'lar da (`tekqrgorusoneri_pgdata` …) kendiliğinden ayrışır.
+# Aynı sunucuda başka yığınlar çalışıyor: `belediye` (Gülşehir), `mezarlik`.
+# ============================================================================
+name: tekqrgorusoneri
+
+services:
+  # ----------------------------------------------------------
+  # PostgreSQL veritabanı
+  # ----------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: tekqr-db
+    restart: unless-stopped
+    # RAM tavanı: OOM anında Linux'un rastgele kurban seçmesini (ör. Postgres'i
+    # öldürmesini) önlemek için her servise açık sınır (.env'den ayarlanır).
+    mem_limit: ${DB_MEM_LIMIT:-768m}
+    logging: *log-rotasyon
+    environment:
+      POSTGRES_USER: belediye
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD gerekli}
+      POSTGRES_DB: belediye
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U belediye -d belediye"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Not: Port host'a AÇILMAZ; yalnızca iç ağdan erişilir (güvenlik).
+
+  # ----------------------------------------------------------
+  # Redis — kalıcı rate-limit sayaçları + SMS OTP deposu + bütçe kesici
+  # ----------------------------------------------------------
+  # SMS kötüye kullanım koruması sayaçlarının restart/deploy'da sıfırlanmaması için.
+  # appendonly ile disk'e yazar (kalıcı). Port host'a AÇILMAZ; yalnız iç ağdan erişilir.
+  #
+  # maxmemory-policy = noeviction (allkeys-lru DEĞİL!): Bu Redis OTP'leri, NX
+  # idempotency/nonce kilitlerini, global SMS bütçe kesicisini ve throttle
+  # sayaçlarını tutar. LRU tahliyesi bunları SESSİZCE siler → bütçe kesici
+  # sıfırlanır (SMS fatura tavanı bypass), akış ortasındaki OTP kaybolur, NX kilidi
+  # silinince çift şikayet açılabilir. noeviction'da bellek dolunca YAZMA komutu
+  # hata verir → store.js catch'i in-memory fail-safe'e düşer (limitler SIKILAŞIR,
+  # gevşemez); okuma çalışmaya devam eder, sayaçlar korunur. Tüm anahtarlar TTL'li
+  # olduğundan normal işleyişte bellek zaten dolmaz; 256mb ek sigorta.
+  redis:
+    image: redis:7-alpine
+    container_name: tekqr-redis
+    restart: unless-stopped
+    mem_limit: ${REDIS_MEM_LIMIT:-384m}
+    logging: *log-rotasyon
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy noeviction
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ----------------------------------------------------------
+  # Veritabanı migration'ı (tek seferlik; app'ten önce çalışır)
+  # ----------------------------------------------------------
+  migrate:
+    container_name: tekqr-migrate
+    build:
+      context: .
+      target: builder
+      args:
+        # builder aşaması `npm run build`'ı burada da çalıştırır (target: builder);
+        # app servisiyle AYNI arg olmalı yoksa BuildKit iki farklı builder katmanı
+        # cache'ler (gereksiz çift build + tutarsızlık riski).
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
+    command: npm run db:migrate
+    logging: *log-rotasyon
+    environment:
+      DATABASE_URL: postgresql://belediye:${DB_PASSWORD}@db:5432/belediye
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  # ----------------------------------------------------------
+  # Next.js uygulaması (standalone)
+  # ----------------------------------------------------------
+  app:
+    container_name: tekqr-app
+    build:
+      context: .
+      target: runner
+      args:
+        # NEXT_PUBLIC_* değişkenleri Next.js'te BUILD ZAMANINDA tarayıcı koduna
+        # gömülür (runtime `environment:`den OKUNMAZ) — bu yüzden burada, build
+        # aşamasında geçirilmesi ZORUNLU. Aşağıdaki `environment:` bloğundaki aynı
+        # isimli runtime değişkeni yalnızca sunucu tarafı kodu içindir.
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
+    restart: unless-stopped
+    mem_limit: ${APP_MEM_LIMIT:-1024m}
+    logging: *log-rotasyon
+    # Node process'i ayakta ve HTTP kabul ediyor mu? (app/api/health — DB'siz, hafif.)
+    # İmaj node:*-slim (wget/curl YOK) → kontrol imajda hazır olan node fetch ile.
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    # Offline harita karoları: host'taki ./tiles klasörü salt-okunur bağlanır.
+    # İmaja gömülmez → yeni belediye eklerken sadece tiles/<slug> indirilir, rebuild yok.
+    volumes:
+      - ./tiles:/app/tiles:ro
+    environment:
+      DATABASE_URL: postgresql://belediye:${DB_PASSWORD}@db:5432/belediye
+      DATABASE_SSL: "false"
+      # Pool: tek app kopyası + lokal PG (max_connections=100) → 20 güvenli.
+      DB_POOL_MAX: "20"
+      # Redis (kalıcı SMS koruması sayaçları + OTP). Boş bırakılırsa in-memory'e düşer.
+      REDIS_URL: redis://redis:6379
+      HMAC_SECRET: ${HMAC_SECRET:?HMAC_SECRET gerekli (en az 32 karakter)}
+      # Per-tenant Netgsm şifresi (tenantlar.netgsm_sifre_enc) AES-256-GCM ile bu anahtarla
+      # şifrelenir/çözülür. HMAC_SECRET'ten AYRI (domain separation). Boşsa per-tenant Netgsm
+      # şifresi çözülemez ve sessizce global NETGSM_* env'ine düşülür (tek belediyede zararsız).
+      SIR_SIFRELEME_ANAHTARI: ${SIR_SIFRELEME_ANAHTARI:-}
+      # Cloudflare→origin gizli header zorlaması (opsiyonel). Boşsa devre dışı.
+      ORIGIN_SECRET: ${ORIGIN_SECRET:-}
+      # SMS OTP kötüye kullanım koruması — Cloudflare Turnstile (bot kapısı):
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+      # Global günlük SMS bütçe kesici tavanı:
+      SMS_GLOBAL_GUN_LIMIT: ${SMS_GLOBAL_GUN_LIMIT:-300}
+      # SMS bütçe kesici uyarı botu (personel/başkan botundan AYRI; boşsa sadece log):
+      TELEGRAM_ALARM_BOT_TOKEN: ${TELEGRAM_ALARM_BOT_TOKEN:-}
+      TELEGRAM_ALARM_CHAT_ID: ${TELEGRAM_ALARM_CHAT_ID:-}
+      # Ana alan adı: subdomain'den belediye (tenant) çözümü buna göre yapılır.
+      # Ör. "sikayet.com" → gulsehir.sikayet.com = "gulsehir". .com.tr de desteklenir.
+      APP_BASE_DOMAIN: ${APP_BASE_DOMAIN:?APP_BASE_DOMAIN gerekli (ör. sikayet.com)}
+      # Şikayet limiti (kimlik başına). Boşsa kod varsayılanı = 1 hafta içinde 1 şikayet.
+      # Test/demo için .env'e SIKAYET_HAFTALIK_ADET=7 yaz (pencereyi SIKAYET_BEKLEME_MS ile kısalt).
+      SIKAYET_HAFTALIK_ADET: ${SIKAYET_HAFTALIK_ADET:-}
+      SIKAYET_BEKLEME_MS: ${SIKAYET_BEKLEME_MS:-}
+      # Aynı QR koddan saatte kaç şikayet gelebilir (varsayılan: kod içinde 50):
+      QR_SAAT_LIMIT: ${QR_SAAT_LIMIT:-}
+      # Aynı IP'den haftada kaç SMS gönderilebilir (varsayılan: kod içinde 3):
+      SMS_IP_HAFTA_LIMIT: ${SMS_IP_HAFTA_LIMIT:-}
+      # Aynı CİHAZDAN (parmak izi) haftada kaç SMS tetiklenebilir (varsayılan: kod içinde 3).
+      # 3 fazla dardı: tek vatandaşın meşru "tekrar gönder"leri (SMS gecikmesi, numara
+      # düzeltme) haftalık hakkı bitiriyor, ortak cihazda ikinci kişi hiç geçemiyordu.
+      SMS_FP_HAFTA_LIMIT: ${SMS_FP_HAFTA_LIMIT:-}
+      # Aynı IP'den dakikada kaç istek (varsayılan: kod içinde 30):
+      IP_DAKIKA_LIMIT: ${IP_DAKIKA_LIMIT:-}
+      # (Konum artık sokağın sabit koordinatından gelir; cihaz GPS'i/anti-spoof kaldırıldı — KONUM_* env YOK.)
+      # Netgsm SMS sağlayıcısı (boşsa MockSmsProvider sessiz çalışır → SMS gitmez):
+      NETGSM_USERCODE: ${NETGSM_USERCODE:-}
+      NETGSM_PASSWORD: ${NETGSM_PASSWORD:-}
+      NETGSM_HEADER: ${NETGSM_HEADER:-}
+      # Telegram saha ekibi botu (boşsa personel bildirimi sessizce kapalı):
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
+      # Moderasyon botu (küfür filtresine takılan şikayetler) — saha/alarm botlarından
+      # AYRI. Boşsa takılan şikayet `moderasyonda` bekler ve kimseye görünmez (WARN loglanır).
+      TELEGRAM_MODERASYON_BOT_TOKEN: ${TELEGRAM_MODERASYON_BOT_TOKEN:-}
+      TELEGRAM_MODERASYON_CHAT_ID: ${TELEGRAM_MODERASYON_CHAT_ID:-}
+      # Boşsa TELEGRAM_WEBHOOK_SECRET'e düşer (route ve kurulum scripti aynı sırayı uygular):
+      TELEGRAM_MODERASYON_WEBHOOK_SECRET: ${TELEGRAM_MODERASYON_WEBHOOK_SECRET:-}
+      # Küfür sözlüğüne deploy'suz eklenen kelimeler (virgülle ayrılır, TAM KELİME aranır):
+      KUFUR_EK_KELIMELER: ${KUFUR_EK_KELIMELER:-}
+      # Cloudflare R2 (şikayet fotoğrafları; boşsa fotoğraf özelliği sessizce kapalı):
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:-}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
+      R2_BUCKET: ${R2_BUCKET:-}
+      # NOT: Doğrulama TEK YOLLUDUR (Netgsm SMS OTP) — DOGRULAMA_YONTEMI / Firebase /
+      # WhatsApp / Twilio değişkenleri kaldırıldı.
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    # Not: Port host'a AÇILMAZ; origin'e tek erişim cloudflared tüneli üzerindendir.
+
+  # ----------------------------------------------------------
+  # Cloudflare Tunnel (cloudflared) — origin'i internete açmadan yayınlar
+  # ----------------------------------------------------------
+  # Sunucuda HİÇBİR inbound port açılmaz; cloudflared Cloudflare edge'ine DIŞARI
+  # doğru bağlanır. TLS'i Cloudflare yapar.
+  #
+  # UZAKTAN-YÖNETİLEN TÜNEL (token): Zero Trust dashboard'da oluşturulan tünelin
+  # token'ı ile bağlanır; ingress kuralları (hangi hostname → hangi servis) da
+  # dashboard'da tutulur, sunucuda config.yml/credentials dosyası GEREKMEZ. Token
+  # `.env`'deki CLOUDFLARE_TUNNEL_TOKEN'dan okunur (asla komut satırında/git'te açık
+  # yazılmaz). Eskiden (Hetzner) locally-managed tünel (./cloudflared/config.yml +
+  # kimlik dosyası) kullanılıyordu; netcup taşınmasıyla token yöntemine geçildi.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: tekqr-cloudflared
+    restart: unless-stopped
+    mem_limit: ${CLOUDFLARED_MEM_LIMIT:-128m}
+    logging: *log-rotasyon
+    # --protocol http2: netcup ağında UDP/QUIC (7844) filtreleniyor (precheck TCP/HTTP2'yi
+    # PASS veriyor ama QUIC'i asla bırakmayıp sonsuz retry'a giriyordu) → TCP tabanlı
+    # http2'ye sabitlenir, otomatik-seçime bırakılmaz.
+    command: tunnel --no-autoupdate --protocol http2 run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?CLOUDFLARE_TUNNEL_TOKEN gerekli (Zero Trust → Networks → Tunnels)}
+    # app "healthy" olmadan tünel açılmasın → deploy sırasında ölü origin'e trafik basılmaz.
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  redisdata:

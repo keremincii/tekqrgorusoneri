@@ -1,0 +1,1566 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #111827;
+  --bg-card: rgba(17, 24, 39, 0.85);
+  --bg-input: rgba(255, 255, 255, 0.05);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-focus: #38bdf8;
+
+  --accent-blue: #38bdf8;
+  --accent-purple: #818cf8;
+  --accent-rose: #f43f5e;
+  --accent-green: #34d399;
+  --accent-amber: #fbbf24;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --gradient-brand: linear-gradient(135deg, #38bdf8, #818cf8);
+  --gradient-rose: linear-gradient(135deg, #f43f5e, #fb7185);
+  --gradient-green: linear-gradient(135deg, #34d399, #6ee7b7);
+
+  --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 30px rgba(56, 189, 248, 0.15);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========== Typography ========== */
+.gradient-text {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ========== Layout ========== */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(ellipse at 30% 20%, rgba(56, 189, 248, 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 80%, rgba(129, 140, 248, 0.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ========== Card ========== */
+.card {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 40px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+}
+
+.card-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.card-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.card-header p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 300;
+}
+
+/* ========== Form Elements ========== */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+}
+
+.form-input::placeholder {
+  color: var(--text-muted);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* ========== Buttons ========== */
+.btn {
+  width: 100%;
+  padding: 16px 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--gradient-brand);
+  color: #000;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-success {
+  background: var(--gradient-green);
+  color: #000;
+}
+
+.btn-danger {
+  background: var(--gradient-rose);
+  color: #fff;
+}
+
+/* ========== Steps Indicator ========== */
+.steps {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 32px;
+}
+
+.step-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border-subtle);
+  transition: all 0.3s ease;
+}
+
+.step-dot.active {
+  background: var(--accent-blue);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+  transform: scale(1.2);
+}
+
+.step-dot.done {
+  background: var(--accent-green);
+}
+
+/* ========== Alerts ========== */
+.alert {
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alert-error {
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  color: #fda4af;
+}
+
+.alert-success {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: #6ee7b7;
+}
+
+.alert-info {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #7dd3fc;
+}
+
+/* ========== Spinner ========== */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-left-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+/* ========== Success Screen ========== */
+.success-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--gradient-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  font-size: 40px;
+  animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+/* ========== Sokak Seçim Sayfası (Bottom Sheet) ==========
+   NEDEN TAM EKRANA YAKIN: Sokak seçimi telefonda yapılıyor ve eski küçük modal'da
+   satırlar 14px'ti — vatandaş listeden emin olamıyordu. Sheet artık ekranın %90'ını
+   kaplar, satırlar 17px ve en az 60px yüksekliğindedir (parmakla rahat hedeflenir).
+
+   PLATFORM UYUMU: Ana kap `data-platform` niteliği taşır ("ios" | "android").
+   iOS'ta başlık ortalanır ve kapatma "İptal" metin butonudur (Cupertino alışkanlığı);
+   Android'de başlık sola yaslanır, kapatma sağ üstte ✕ ikonudur (Material 3).
+   Bilinmeyen platformda Android düzenine düşülür (masaüstü dâhil). */
+.sokak-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;      /* sheet aşağıdan gelir */
+  justify-content: center;
+  background: rgba(3, 7, 18, 0.62);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  animation: fadeIn 0.22s ease;
+}
+
+.sokak-sheet {
+  width: 100%;
+  max-width: 640px;           /* masaüstünde ortada makul genişlik */
+  height: 90dvh;              /* dvh: mobil tarayıcı çubuğu açılıp kapanınca zıplamaz */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;           /* köşe yuvarlaması içerikte de korunsun */
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-bottom: none;
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -10px 44px rgba(0, 0, 0, 0.55);
+  animation: sheetUp 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@supports not (height: 90dvh) { .sokak-sheet { height: 90vh; } }
+
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* Tutamaç (grabber) — sheet olduğunu ve aşağı kaydırılabileceğini sezdirir. */
+.sokak-sheet-tutamac {
+  width: 40px;
+  height: 5px;
+  margin: 8px auto 2px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.22);
+  flex: none;
+}
+
+.sokak-sheet-header {
+  flex: none;
+  padding: 6px 16px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sokak-sheet-ust {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;           /* dokunma hedefi */
+}
+
+.sokak-sheet-baslik {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  flex: 1;
+}
+
+.sokak-sheet-kapat {
+  flex: none;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--accent-blue);
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sokak-sheet-kapat:hover { background: rgba(255, 255, 255, 0.06); }
+
+/* iOS: başlık ortada, "İptal" solda (Cupertino) */
+[data-platform='ios'] .sokak-sheet-baslik {
+  text-align: center;
+  font-size: 17px;
+  font-weight: 700;
+  order: 2;
+}
+[data-platform='ios'] .sokak-sheet-kapat { order: 1; }
+[data-platform='ios'] .sokak-sheet-denge { order: 3; min-width: 44px; flex: none; }
+/* Android/masaüstü: başlık solda, ✕ sağda → denge kutusu gereksiz */
+.sokak-sheet-denge { display: none; }
+[data-platform='ios'] .sokak-sheet-denge { display: block; }
+
+.sokak-sheet-arama {
+  width: 100%;
+  margin-top: 10px;
+  padding: 13px 14px;
+  font-size: 16px;            /* 16px altı iOS'ta sayfayı ZOOMLAR — düşürme */
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  outline: none;
+}
+.sokak-sheet-arama:focus { border-color: var(--border-focus); }
+.sokak-sheet-arama::placeholder { color: var(--text-muted); }
+
+.sokak-sheet-liste {
+  flex: 1;
+  min-height: 0;              /* flex çocuğunun kaydırılabilmesi için şart */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain; /* sheet sonunda arka sayfa kaymasın */
+  padding: 8px 12px 16px;
+}
+
+.sokak-sheet-grup {
+  margin: 10px 4px 6px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* Liste satırı: geniş dokunma alanı + büyük punto + seçili işareti */
+.sokak-secenek {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 14px 14px;
+  margin-bottom: 6px;
+  text-align: left;
+  font-size: 17px;
+  line-height: 1.35;
+  color: var(--text-primary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.sokak-secenek:hover { background: rgba(255, 255, 255, 0.04); }
+.sokak-secenek:active { background: rgba(255, 255, 255, 0.08); }
+.sokak-secenek[data-secili='true'] {
+  background: rgba(56, 189, 248, 0.13);
+  border-color: rgba(56, 189, 248, 0.45);
+  font-weight: 700;
+}
+
+.sokak-secenek-metin { flex: 1; min-width: 0; }
+.sokak-secenek-not {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+/* Seçim göstergesi: seçiliyken dolu daire + tik, değilken boş halka */
+.sokak-secenek-tik {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 2px solid var(--border-subtle);
+  color: transparent;
+  font-size: 15px;
+  font-weight: 800;
+}
+.sokak-secenek[data-secili='true'] .sokak-secenek-tik {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: #061018;
+}
+
+.sokak-sheet-bos {
+  padding: 28px 14px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+/* Alt bölüm: "listede yok, elle yaz" — her zaman görünür (sticky footer) */
+.sokak-sheet-alt {
+  flex: none;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-secondary);
+}
+.sokak-sheet-alt-etiket {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.sokak-sheet-alt-satir { display: flex; gap: 8px; }
+.sokak-sheet-alt-giris {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 14px;
+  font-size: 16px;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  outline: none;
+}
+.sokak-sheet-alt-giris:focus { border-color: var(--border-focus); }
+.sokak-sheet-alt-buton {
+  flex: none;
+  min-height: 48px;
+  padding: 0 20px;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  border-radius: 14px;
+  background: var(--accent-blue);
+  color: #061018;
+  cursor: pointer;
+}
+.sokak-sheet-alt-buton:disabled {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+/* Hareket duyarlılığı olan kullanıcılar için animasyonu kapat. */
+@media (prefers-reduced-motion: reduce) {
+  .sokak-sheet, .sokak-sheet-overlay { animation: none; }
+}
+
+/* NOT: Eski `.konum-modal-overlay` / `.konum-modal-card` (ortada duran küçük pencere)
+   KALDIRILDI — yerini yukarıdaki tam-ekrana yakın sokak sheet'i aldı. Sınıfların hiçbir
+   kullanımı kalmadığı doğrulandı (grep: 0 sonuç). `modalIn` animasyonu da yalnız o
+   karta aitti; sheet kendi `sheetUp` animasyonunu kullanıyor. */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ========== Harita üstü kontrol kutusu (renk açıklaması + çözülenler) ==========
+   z-index 800: Leaflet kendi panellerini 400–700 arasında konumlandırır (tile 200,
+   overlay 400, popup 700) → kutu onların üstünde kalır; sayfa modalları (10000)
+   yine bunun üstündedir. */
+.harita-kontrol {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 800;
+  min-width: 148px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(17, 24, 39, 0.92);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 12px;
+  color: var(--text-primary);
+  user-select: none;
+}
+
+.harita-kontrol-baslik {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.harita-kontrol-satir {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.harita-kontrol-nokta {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.75);
+}
+
+.harita-kontrol-anahtar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+  cursor: pointer;
+}
+.harita-kontrol-anahtar input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent-green);
+  cursor: pointer;
+}
+
+/* ========== Admin Map ========== */
+.admin-layout {
+  display: flex;
+  height: 100vh;
+  height: 100dvh; /* mobil tarayıcı çubuğu 100vh'yi taşırıyordu → alt içerik kesiliyordu */
+  width: 100%;
+}
+
+.admin-sidebar {
+  width: 420px;
+  min-width: 420px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.admin-sidebar-header {
+  padding: 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.admin-sidebar-content {
+  flex: 1;
+  min-height: 0; /* flex child'ın içeriğinden küçülüp overflow-y:auto ile scroll olabilmesi için ŞART */
+  overflow-y: auto;
+  padding: 12px 12px 40px; /* en alttaki eleman foldda yarım kesilmesin diye ekstra alt boşluk */
+}
+
+.admin-map-container {
+  flex: 1;
+  position: relative;
+}
+
+/* Complaint Card in Sidebar */
+.sikayet-card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 11px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  /* Yalnızca renk geçişi; konum/boyut animasyonu YOK (sade, kasmasız). */
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.sikayet-card:hover {
+  border-color: var(--accent-blue);
+}
+
+/* Seçili şikayet — başkanın haritada odaklandığı kart belirgin büyür ve yazıları
+   okunaklılaşır (TV'den uzaktan takip için). Hareket animasyonu yok; sadece boyut + vurgu. */
+.sikayet-card.secili {
+  border-color: var(--accent-blue);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.10), rgba(129, 140, 248, 0.06));
+  box-shadow: 0 0 0 1px var(--accent-blue), 0 8px 28px rgba(56, 189, 248, 0.14);
+  padding: 20px 18px 18px 24px;
+}
+
+.sikayet-card.secili::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: var(--gradient-brand);
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.sikayet-card.secili .sikayet-card-header h3 {
+  font-size: 19px;
+}
+
+.sikayet-card.secili p {
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.sikayet-card.secili .tarih {
+  font-size: 13px;
+}
+
+.sikayet-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sikayet-card h3 {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.durum-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.durum-beklemede {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--accent-amber);
+}
+
+.durum-inceleniyor {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--accent-blue);
+}
+
+.durum-cozuldu {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--accent-green);
+}
+
+.sikayet-card p {
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.45;
+  /* Yazıyı küçültmeden yer kazan: açıklamayı 2 satıra kırp (seçilince tam açılır) */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sikayet-card.secili p {
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+.sikayet-card .tarih {
+  font-size: 12px;
+  color: var(--text-primary);
+  margin-top: 5px;
+}
+
+/* ========== Filtrele / Sırala (sol panel, sidebar başlığı) ========== */
+.filtre-sirala-satir {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  position: relative;
+}
+
+.mini-dropdown-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.mini-dropdown-btn {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-input);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.mini-dropdown-btn:hover {
+  border-color: var(--accent-blue);
+  color: var(--text-primary);
+}
+
+.mini-dropdown-btn.aktif {
+  border-color: var(--accent-blue);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.14), rgba(129, 140, 248, 0.08));
+  color: var(--text-primary);
+}
+
+.mini-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  min-width: 220px;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.mini-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.mini-popover-item:hover {
+  background: var(--bg-input);
+}
+
+.mini-popover-item input[type='checkbox'],
+.mini-popover-item input[type='radio'] {
+  flex: 0 0 auto;
+  accent-color: var(--accent-blue);
+  cursor: pointer;
+}
+
+.mini-popover-ikon {
+  flex: 0 0 auto;
+}
+
+.mini-popover-etiket {
+  flex: 1;
+  min-width: 0;
+}
+
+.mini-popover-say {
+  flex: 0 0 auto;
+  min-width: 20px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.mini-popover-temizle {
+  margin-top: 4px;
+  padding: 7px 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--accent-rose);
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mini-popover-temizle:hover {
+  background: rgba(244, 63, 94, 0.1);
+}
+
+/* ========== Sidebar Arama ========== */
+.sidebar-arama {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  outline: none;
+}
+
+.sidebar-arama:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+}
+
+.sidebar-arama::placeholder {
+  color: #fff;
+}
+
+/* ========== Sokak Grubu (katlanır) ========== */
+.sokak-grup {
+  margin-bottom: 8px;
+}
+
+.sokak-grup-baslik {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.sokak-grup-baslik:hover {
+  border-color: var(--accent-blue);
+}
+
+.sokak-grup-baslik.acik {
+  border-color: var(--accent-blue);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.sokak-grup-nokta {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+}
+
+.sokak-grup-ad {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sokak-grup-ozet {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.sokak-grup-ok {
+  flex: 0 0 auto;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.sokak-grup-icerik {
+  padding: 8px;
+  border: 1px solid var(--border-subtle);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* Grup içindeki kompakt kart */
+.sikayet-card--grup {
+  margin-bottom: 8px;
+}
+
+.sikayet-card--grup:last-child {
+  margin-bottom: 0;
+}
+
+.sikayet-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.sikayet-card-meta .tarih {
+  margin-top: 0;
+}
+
+.foto-isaret {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* Kart içi fotoğraf önizleme: kompaktta küçük, seçili kartta büyür. Tıkla → tam ekran. */
+.sikayet-foto-onizleme {
+  display: block;
+  width: 100%;
+  max-height: 120px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  margin: 10px 0 4px;
+  cursor: pointer;
+  border: 1px solid var(--border-subtle);
+  transition: max-height 0.15s ease;
+}
+
+.sikayet-card.secili .sikayet-foto-onizleme {
+  max-height: 240px;
+}
+
+/* ========== Stat Chips ========== */
+.stat-chips {
+  display: flex;
+  gap: 8px;
+  margin-top: 0;
+}
+
+.stat-chip {
+  flex: 1;
+  text-align: center;
+  padding: 7px 6px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.stat-chip .value {
+  font-size: 22px;
+  font-weight: 800;
+  display: block;
+}
+
+.stat-chip .label {
+  font-size: 11px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ========== Leaflet Overrides ========== */
+.leaflet-container {
+  background: var(--bg-primary) !important;
+  font-family: 'Outfit', sans-serif !important;
+}
+
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.leaflet-control-zoom a {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-subtle) !important;
+  backdrop-filter: blur(10px);
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--bg-card) !important;
+}
+
+.leaflet-popup-content {
+  font-family: 'Outfit', sans-serif !important;
+  margin: 12px 16px !important;
+}
+
+/* ========== Harita Isı Pinleri & Kümeler ========== */
+.harita-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #0a1020;
+  font-weight: 800;
+  font-family: 'Outfit', sans-serif;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  will-change: transform;
+}
+
+.harita-pin:hover {
+  transform: scale(1.12);
+}
+
+.harita-pin--kume {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* ========== Harita Popup (konum şikayet listesi) ========== */
+.hp {
+  font-family: 'Outfit', sans-serif;
+}
+
+.hp-baslik {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.hp-baslik strong {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.hp-ozet {
+  font-size: 13px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.hp-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.hp-liste::-webkit-scrollbar {
+  width: 6px;
+}
+
+.hp-liste::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 3px;
+}
+
+.hp-item {
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.hp-item-ust {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.hp-kat {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.hp-item-sag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.hp-foto-btn {
+  border: none;
+  cursor: pointer;
+  background: rgba(59, 130, 246, .15);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 14px;
+  line-height: 1;
+  transition: background .15s ease;
+}
+
+.hp-foto-btn:hover {
+  background: rgba(59, 130, 246, .35);
+}
+
+.hp-aciklama {
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 4px 0;
+}
+
+.hp-tarih {
+  font-size: 12px;
+  color: var(--text-primary);
+  margin-top: 4px;
+  display: block;
+}
+
+.hp-liste .durum-badge {
+  font-size: 11px;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+
+/* ========== Kategori Buton Grid ========== */
+.kategori-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.kategori-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px 8px;
+  border-radius: var(--radius-md);
+  /* Koyu zeminde eski hâli (border-subtle + %3 beyaz) neredeyse görünmüyordu ve
+     butonlar birbirinden ayrışmıyordu. Marka mavisiyle hafif "cam kart" görünümü:
+     her kart net bir sınıra sahip, zeminden ve komşusundan belirgin ayrışıyor. */
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  background: rgba(56, 189, 248, 0.07);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Outfit', sans-serif;
+  color: var(--text-primary);
+}
+
+.kategori-btn:hover {
+  border-color: var(--accent-blue);
+  background: rgba(56, 189, 248, 0.13);
+  transform: translateY(-1px);
+}
+
+.kategori-btn:active {
+  transform: scale(0.97);
+}
+
+.kategori-btn.selected {
+  border-color: var(--accent-blue);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(168, 85, 247, 0.08));
+  color: var(--text-primary);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+}
+
+.kategori-ikon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.kategori-etiket {
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.3;
+  color: #fff;
+}
+
+/* ========== Form Row (yan yana inputlar) ========== */
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+/* ========== SMS Input ========== */
+.sms-input {
+  text-align: center;
+  font-size: 28px;
+  letter-spacing: 12px;
+  font-weight: 800;
+  padding: 18px 16px;
+}
+
+/* ========== Back Button ========== */
+.btn-back {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  text-align: center;
+}
+
+.btn-back:hover {
+  color: var(--text-primary);
+}
+
+/* ========== Responsive: Tablet ========== */
+@media (max-width: 768px) {
+  .card {
+    padding: 28px 20px;
+    border-radius: var(--radius-lg);
+  }
+
+  .admin-layout {
+    flex-direction: column-reverse;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    min-width: unset;
+    max-height: 40vh;
+    border-right: none;
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
+/* ========== Responsive: Mobil (Telefon) ========== */
+@media (max-width: 480px) {
+  html {
+    font-size: 15px;
+  }
+
+  .page-container {
+    padding: 12px;
+    padding-top: env(safe-area-inset-top, 24px);
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+    justify-content: flex-start;
+  }
+
+  .card {
+    padding: 24px 16px;
+    border-radius: var(--radius-md);
+    max-width: 100%;
+    box-shadow: none;
+    border: none;
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  .card-header h1 {
+    font-size: 22px;
+  }
+
+  .card-header p {
+    font-size: 13px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .form-input {
+    padding: 16px 14px;
+    font-size: 16px; /* iOS zoom önleme: 16px altına düşürmeyin */
+  }
+
+  .form-textarea {
+    min-height: 140px;
+  }
+
+  .sms-input {
+    font-size: 24px;
+    letter-spacing: 8px;
+    padding: 20px 12px;
+  }
+
+  .btn {
+    padding: 18px 24px;
+    font-size: 16px;
+    border-radius: var(--radius-md);
+  }
+
+  .alert {
+    font-size: 13px;
+    padding: 12px 14px;
+  }
+
+  .steps {
+    margin-bottom: 24px;
+  }
+
+  .success-icon {
+    width: 64px;
+    height: 64px;
+    font-size: 32px;
+  }
+
+  .stat-chips {
+    flex-direction: column;
+  }
+}
+
+/* ========== Saha Ekibi (Personel) — Atama & Yönetim ========== */
+
+/* İkincil buton (Saha Ekibi aç/kapa) */
+.btn-secondary {
+  background: var(--bg-input);
+  color: #fff;
+  border: 1px solid var(--border-subtle);
+}
+.btn-secondary:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--accent-blue);
+}
+
+/* Şikayet kartındaki atama satırı */
+.atama-satir {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-subtle);
+}
+.atama-label {
+  font-size: 12px;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.atama-select {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 8px;
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+}
+.atama-select option {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.atama-select:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+.atama-cozen {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-subtle);
+  font-size: 12px;
+  color: var(--accent-green);
+}
+
+/* Popup içi salt-okunur atama/çözen satırı */
+.hp-atama {
+  display: block;
+  font-size: 11px;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
+/* Saha ekibi yönetim paneli */
+.personel-panel {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+}
+.personel-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.personel-form-satir {
+  display: flex;
+  gap: 8px;
+}
+.personel-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+}
+.personel-input::placeholder {
+  color: var(--text-primary);
+  opacity: 1;
+}
+
+.personel-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+.personel-hata {
+  color: var(--accent-rose);
+  font-size: 12px;
+  margin: 0;
+}
+.personel-liste {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.personel-bos {
+  color: var(--text-primary);
+  font-size: 12px;
+  text-align: center;
+  margin: 4px 0;
+}
+.personel-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+}
+.personel-item-bilgi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.personel-ad {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.personel-rozet {
+  font-size: 11px;
+}
+.personel-rozet.bagli {
+  color: var(--accent-green);
+}
+.personel-rozet.baglideg {
+  color: var(--text-primary);
+}
+.personel-item-aksiyon {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.personel-mini-btn {
+  padding: 5px 8px;
+  font-size: 11px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.personel-mini-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-blue);
+}
+.personel-mini-btn.sil:hover {
+  color: var(--accent-rose);
+  border-color: var(--accent-rose);
+}

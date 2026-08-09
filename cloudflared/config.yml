@@ -1,0 +1,31 @@
+# Cloudflare Tunnel (locally-managed) yapılandırması
+# ===================================================
+# Bu dosya + kimlik dosyası (<UUID>.json) `cloudflared tunnel create` ile üretilir.
+# Aşağıdaki <TUNNEL_UUID> iki yeri de GERÇEK tünel UUID'siyle değiştirin (bkz DEPLOY.md).
+#
+# Origin'e (app:3000) tek erişim bu tüneldir; sunucuda hiçbir inbound port açılmaz.
+# Wildcard ingress sayesinde YENİ belediye eklerken bu dosya DEĞİŞMEZ — sadece
+# o subdomain için bir DNS kaydı eklersiniz (cloudflared tunnel route dns ...).
+
+tunnel: <TUNNEL_UUID>
+credentials-file: /etc/cloudflared/<TUNNEL_UUID>.json
+
+# Bağlantı dayanıklılığı (varsayılanlar iyidir; istenirse ayarlanır)
+# protocol: quic
+
+ingress:
+  # Domain: dijitalbelediyem.com (.env'deki APP_BASE_DOMAIN ile AYNI olmalı).
+  #
+  # Tüm belediye subdomain'leri (gulsehir.dijitalbelediyem.com, ...) tek uygulamaya
+  # gider; tenant ayrımını uygulama Host başlığından yapar. QR yönlendirici kökü
+  # (qr.dijitalbelediyem.com → /q/<id>) de bu wildcard'a takılır; ayrıca DNS route'u
+  # BİR KEZ eklenir (bkz. DEPLOY.md 6.5).
+  - hostname: "*.dijitalbelediyem.com"
+    service: http://app:3000
+
+  # Ana alan adı (çıplak kök → uygulamada 404; landing yok)
+  - hostname: "dijitalbelediyem.com"
+    service: http://app:3000
+
+  # Zorunlu catch-all: eşleşmeyen her şey 404.
+  - service: http_status:404

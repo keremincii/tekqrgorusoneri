@@ -1,0 +1,78 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files — gerçek değerler ASLA girmez; örnek şablonlar repoda kalır
+.env*
+!.env.example
+!.env.docker.example
+
+# seed çıktıları (tenant başına otomatik üretilir, repoya gerek yok)
+/qr_linkleri*.json
+/seed*.sql
+/qr_tenant.*.sql
+/qr_tenant.*.json
+/qr_sinir.*.sql
+# sokak/tabela güncelleme SQL çıktıları (tenant başına üretilir; UUID+koordinat+numara)
+/tabela-*.sql
+/guncelle.*.sql
+/guncelle-*.sql
+/yeni_qr.*.json
+/mevcut.*.csv
+
+# QR tabela çıktıları (tenant başına üretilir, büyük HTML; repoya gerek yok)
+/qr-tabelalar.*.html
+/qr-yerlesim-listesi.*.html
+/vektor-tabelalar/
+
+# offline harita karoları (tenant bbox'ı için indirilir; büyük + sunucuya özel)
+/tiles/
+
+# tenant veri girdileri ve kontrol çıktıları (app kodu değil)
+*.csv
+/sokak_kontrol.json
+
+# SonarQube tarayıcı çıktısı (yerel araç, her taramada yeniden üretilir)
+/.scannerwork
+
+# Cloudflare Tunnel kimlik bilgileri (ASLA repoya girmez)
+/cloudflared/*.json
+/cloudflared/cert.pem
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# Claude Code oturum dizini
+.claude/
