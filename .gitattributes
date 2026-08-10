@@ -1,0 +1,22 @@
+# Satır sonu normalizasyonu
+# =========================
+# Geliştirme Windows'ta, çalışma Linux konteynerinde. Bu dosya olmadan git, checkout
+# sırasında metin dosyalarını CRLF'e çevirir; sunucuya kopyalandıklarında commit ile
+# "farklı" görünürler (içerik aynı olsa bile) ve `git status` sürekli kirli çıkar.
+# Daha kötüsü: CRLF'li bir shell script Linux'ta çalışmaz — `#!/usr/bin/env bash\r`
+# yorumlayıcı olarak bulunamaz ve dosya "not found" hatası verir.
+#
+# `eol=lf`: depoda da, çalışma kopyasında da LF. Windows editörleri LF ile sorunsuz
+# çalışır; kazanç, her platformda tek ve öngörülebilir biçim olmasıdır.
+* text=auto eol=lf
+
+# İkili dosyalar: dokunma (dönüştürme bozar).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+*.pdf binary

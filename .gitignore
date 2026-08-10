@@ -35,6 +35,20 @@ yarn-error.log*
 !.env.example
 !.env.docker.example
 
+# EDİTÖR ARTIKLARI — sırların repoya sızdığı en sinsi yol.
+# `.env*` kalıbı YETMEZ: vim `.env`i düzenlerken swap dosyasını `..env.swp` adıyla
+# (İKİ nokta) açar; bu ad `.env*` ile EŞLEŞMEZ ve dosya .env'in ham içeriğini taşır.
+# Sunucuda böyle bir kalıntı bulundu — orada `git add -A` çalıştıran biri tüm sırları
+# commit'lemiş olurdu. Aşağıdaki kalıplar bu yolu kapatır.
+*.swp
+*.swo
+*.swn
+.*.sw[a-p]
+..*.sw[a-p]
+*~
+.#*
+\#*#
+
 # seed çıktıları (tenant başına otomatik üretilir, repoya gerek yok)
 /qr_linkleri*.json
 /seed*.sql
