@@ -1,99 +1,86 @@
 import { NextResponse } from 'next/server';
-import { getSikayetService, getAdminService, getTelegramService } from '@/lib/services';
+import { getSikayetService, getTelegramService, getBasvuruAkisServisi } from '@/lib/services';
 import { guvenliJsonParse } from '@/lib/security/sanitize';
 import { SikayetDurumu, GORUNMEZ_DURUMLAR, durumKapaliMi } from '@/lib/utils/constants';
-import { aktifTenant } from '@/lib/server/tenant';
+import { adminOturumKontrol } from '@/lib/server/adminOturum';
+
+/** Tek sayfada dönebilecek en fazla kayıt (istemci daha fazlasını isteyemez). */
+const SAYFA_TAVANI = 500;
+/** Sayfa boyutu belirtilmezse. Panelin ilk ekranını rahat dolduran bir değer. */
+const SAYFA_VARSAYILAN = 100;
 
 /**
  * GET /api/admin/sikayetler
- * 
- * Başkanın haritasında gösterilecek tüm aktif şikayetleri döndürür.
- * Oturum çerezi ile korunur (proxy.js + buradaki ek kontrol).
+ *
+ * Başkan panelinin listesi. Filtreler SUNUCUDA uygulanır:
+ *   ?tur=sikayet|gorus|oneri   → tek tür (yoksa hepsi)
+ *   ?durum=beklemede,inceleniyor → virgüllü durum listesi (yoksa görünür olanların hepsi)
+ *   ?q=<arama>                 → başvuru metninde geçen ifade
+ *   ?limit= &offset=           → sayfalama ("daha fazla yükle")
+ *   ?sayimlar=1                → yanıta (tür, durum) kırılımlı toplam sayaçlar eklenir
+ *
+ * Sayaçlar liste ile aynı yanıtta ama AYRI hesaplanır: liste sayfalıdır, rozetlerin
+ * ise TÜM tabloyu yansıtması gerekir. İstemci ilk yüklemede ister, sonraki
+ * "daha fazla" isteklerinde istemez (boşuna sayım yapılmasın).
  */
 export async function GET(request) {
   try {
-    const tenant = await aktifTenant(request);
-    if (!tenant) {
-      return NextResponse.json({ hata: 'Belediye bulunamadı.' }, { status: 404 });
-    }
+    const { tenant, hataYanit } = await adminOturumKontrol(request);
+    if (hataYanit) return hataYanit;
 
-    // Defense in Depth: Proxy zaten kontrol ediyor ama biz de yapalım
-    const oturumCerezi = request.cookies.get('admin_oturum');
-    if (!oturumCerezi?.value) {
-      return NextResponse.json({ hata: 'Yetkisiz erişim.' }, { status: 401 });
-    }
-
-    const adminService = getAdminService();
-    const gecerli = await adminService.oturumDogrula(oturumCerezi.value, tenant.id);
-    if (!gecerli) {
-      return NextResponse.json({ hata: 'Oturum geçersiz veya süresi dolmuş.' }, { status: 401 });
-    }
-
-    // Sayfalama: ?limit ve ?offset (varsayılan 1000 kayıt)
     const url = new URL(request.url);
-    const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '1000', 10) || 1000, 1), 5000);
+    const limit = Math.min(
+      Math.max(parseInt(url.searchParams.get('limit') || String(SAYFA_VARSAYILAN), 10) || SAYFA_VARSAYILAN, 1),
+      SAYFA_TAVANI
+    );
     const offset = Math.max(parseInt(url.searchParams.get('offset') || '0', 10) || 0, 0);
+    const durumParam = url.searchParams.get('durum');
 
     const sikayetService = getSikayetService();
-    const sikayetler = await sikayetService.aktifSikayetleriGetir(tenant.id, { limit, offset });
+    const liste = await sikayetService.panelListesi(tenant.id, {
+      tur: url.searchParams.get('tur') || null,
+      // Whitelist servis katmanında; burada yalnız ayrıştırma yapılır.
+      durumlar: durumParam ? durumParam.split(',').map((d) => d.trim()).filter(Boolean) : null,
+      arama: url.searchParams.get('q') || '',
+      limit,
+      offset,
+    });
 
     // R2 anahtarını istemciye SIZDIRMA: yalnızca fotoğraf VAR MI bilgisini ver.
     // Fotoğrafın kendisi yetkili /api/admin/foto/[id] route'undan çekilir.
-    const guvenliListe = sikayetler.map(({ fotografUrl, ...s }) => ({
+    const guvenliListe = liste.map(({ fotografUrl, ...s }) => ({
       ...s,
       fotografVar: Boolean(fotografUrl),
     }));
 
-    // Haritanın bu belediyeye odaklanması için tenant'ın kendi merkez/zoom değerleri
-    // (tenantlar tablosundan). Çok-tenant'lı tek dağıtımda harita merkezi build-time
-    // env'den DEĞİL, subdomain'den çözülen tenant kaydından gelir.
-    const merkezVar = Number.isFinite(tenant.haritaEnlem) && Number.isFinite(tenant.haritaBoylam);
-    // Sabit görünüm kutusu (sinir): dört köşe de tanımlıysa haritayı bu kutuya kilitle.
-    // Global env DEĞİL, bu belediyenin DB kaydından (per-tenant).
-    const sinirVar = [tenant.sinirGbEnlem, tenant.sinirGbBoylam, tenant.sinirKdEnlem, tenant.sinirKdBoylam]
-      .every((v) => Number.isFinite(v));
-    const belediye = {
-      ad: tenant.ad,
-      merkez: merkezVar ? [tenant.haritaEnlem, tenant.haritaBoylam] : null,
-      zoom: tenant.haritaZoom || 14,
-      sinir: sinirVar
-        ? [[tenant.sinirGbEnlem, tenant.sinirGbBoylam], [tenant.sinirKdEnlem, tenant.sinirKdBoylam]]
-        : null,
+    const yanit = {
+      basvurular: guvenliListe,
+      // Sayfanın sonuna gelindi mi? İstemci "daha fazla yükle" butonunu buna göre gizler.
+      devamVar: guvenliListe.length === limit,
+      belediye: { ad: tenant.ad, baskanAdi: tenant.baskanAdi || null },
     };
 
-    return NextResponse.json({ sikayetler: guvenliListe, belediye });
+    if (url.searchParams.get('sayimlar') === '1') {
+      yanit.sayimlar = await sikayetService.panelSayimlari(tenant.id);
+    }
+
+    return NextResponse.json(yanit);
   } catch (err) {
-    console.error('Şikayet listeleme hatası:', err);
+    console.error('Başvuru listeleme hatası:', err);
     return NextResponse.json({ hata: 'Veriler yüklenemedi.' }, { status: 500 });
   }
 }
 
 /**
  * PATCH /api/admin/sikayetler
- * 
- * Şikayet durumunu günceller (başkan tarafından).
- * 
- * İstek gövdesi:
- * { sikayetId, yeniDurum }
+ *
+ * Başvuru durumunu günceller (başkan tarafından).
+ * İstek gövdesi: { sikayetId, yeniDurum }
  */
 export async function PATCH(request) {
   try {
-    const tenant = await aktifTenant(request);
-    if (!tenant) {
-      return NextResponse.json({ hata: 'Belediye bulunamadı.' }, { status: 404 });
-    }
-
-    // Oturum kontrolü
-    const oturumCerezi = request.cookies.get('admin_oturum');
-    if (!oturumCerezi?.value) {
-      return NextResponse.json({ hata: 'Yetkisiz erişim.' }, { status: 401 });
-    }
-
-    const adminService = getAdminService();
-    const gecerli = await adminService.oturumDogrula(oturumCerezi.value, tenant.id);
-    if (!gecerli) {
-      return NextResponse.json({ hata: 'Oturum geçersiz.' }, { status: 401 });
-    }
+    const { tenant, hataYanit } = await adminOturumKontrol(request);
+    if (hataYanit) return hataYanit;
 
     const { veri, hata: parseHata } = await guvenliJsonParse(request);
     if (parseHata) {
@@ -103,7 +90,7 @@ export async function PATCH(request) {
     const { sikayetId, yeniDurum } = veri;
 
     if (!sikayetId || !yeniDurum) {
-      return NextResponse.json({ hata: 'Şikayet ID ve yeni durum zorunludur.' }, { status: 400 });
+      return NextResponse.json({ hata: 'Başvuru ID ve yeni durum zorunludur.' }, { status: 400 });
     }
 
     // Kaba durum kontrolü; ASIL KAPI SikayetService.durumGuncelle'dedir (orası
@@ -126,6 +113,11 @@ export async function PATCH(request) {
       return NextResponse.json({ hata: sonuc.hata }, { status: 400 });
     }
 
+    // Diğer açık paneller de anında görsün (aynı başkanlıkta iki kişi bakıyor olabilir).
+    await getBasvuruAkisServisi()
+      .basvuruGuncellendi(sikayetId, tenant.id)
+      .catch((e) => console.error('canlı akış yayını hatası:', e));
+
     // ÇÖZÜM SMS'i: kayıt bu güncellemeyle SONUÇLANDIYSA vatandaşa bilgi gider.
     // Telegram'daki "Çözüldü" butonu bunu zaten yapıyordu; panelden kapatılan kayıt
     // ise bildirimsiz kalıyordu — vatandaş açısından kimin kapattığı önemli değil.
@@ -138,7 +130,7 @@ export async function PATCH(request) {
 
     return NextResponse.json({
       basarili: true,
-      mesaj: `Şikayet durumu "${yeniDurum}" olarak güncellendi.`,
+      mesaj: `Başvuru durumu "${yeniDurum}" olarak güncellendi.`,
     });
   } catch (err) {
     console.error('Durum güncelleme hatası:', err);
@@ -148,31 +140,16 @@ export async function PATCH(request) {
 
 /**
  * DELETE /api/admin/sikayetler
- * 
- * Şikayeti soft-delete ile siler (başkan tarafından).
- * Veritabanından tamamen kaldırılmaz, sadece "silindi" olarak işaretlenir.
- * 
- * İstek gövdesi:
- * { sikayetId }
+ *
+ * Başvuruyu soft-delete ile siler (başkan tarafından). Veritabanından hemen
+ * kaldırılmaz; `SILINEN_KALICI_GUN` sonunda periyodik imha görevi kalıcı siler.
+ *
+ * İstek gövdesi: { sikayetId }
  */
 export async function DELETE(request) {
   try {
-    const tenant = await aktifTenant(request);
-    if (!tenant) {
-      return NextResponse.json({ hata: 'Belediye bulunamadı.' }, { status: 404 });
-    }
-
-    // Oturum kontrolü
-    const oturumCerezi = request.cookies.get('admin_oturum');
-    if (!oturumCerezi?.value) {
-      return NextResponse.json({ hata: 'Yetkisiz erişim.' }, { status: 401 });
-    }
-
-    const adminService = getAdminService();
-    const gecerli = await adminService.oturumDogrula(oturumCerezi.value, tenant.id);
-    if (!gecerli) {
-      return NextResponse.json({ hata: 'Oturum geçersiz.' }, { status: 401 });
-    }
+    const { tenant, hataYanit } = await adminOturumKontrol(request);
+    if (hataYanit) return hataYanit;
 
     const { veri, hata: parseHata } = await guvenliJsonParse(request);
     if (parseHata) {
@@ -182,22 +159,25 @@ export async function DELETE(request) {
     const { sikayetId } = veri;
 
     if (!sikayetId) {
-      return NextResponse.json({ hata: 'Şikayet ID zorunludur.' }, { status: 400 });
+      return NextResponse.json({ hata: 'Başvuru ID zorunludur.' }, { status: 400 });
     }
 
-    const sikayetService = getSikayetService();
-    const sonuc = await sikayetService.sil(sikayetId, tenant.id);
+    const sonuc = await getSikayetService().sil(sikayetId, tenant.id);
 
     if (!sonuc.basarili) {
       return NextResponse.json({ hata: sonuc.hata }, { status: 400 });
     }
 
+    await getBasvuruAkisServisi()
+      .basvuruSilindi(sikayetId, tenant.id)
+      .catch((e) => console.error('canlı akış yayını hatası:', e));
+
     return NextResponse.json({
       basarili: true,
-      mesaj: 'Şikayet başarıyla silindi.',
+      mesaj: 'Başvuru silindi.',
     });
   } catch (err) {
-    console.error('Şikayet silme hatası:', err);
+    console.error('Başvuru silme hatası:', err);
     return NextResponse.json({ hata: 'Silme işlemi başarısız.' }, { status: 500 });
   }
 }

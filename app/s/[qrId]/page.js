@@ -6,9 +6,8 @@ import SikayetFormu from './SikayetFormu';
  * =================================
  *
  * Yalnızca Suspense sınırını kuran ince bir kabuktur; asıl sihirbaz ./SikayetFormu.js
- * içindedir. Sunucuda çözülen bir karar YOKTUR (tenant'a bağlı davranış bayrakları
- * kaldırıldı) — form her belediyede aynı akışı işletir: kategori → sokak → açıklama →
- * fotoğraf → özet → doğrulama.
+ * içindedir. Sunucuda çözülen bir karar YOKTUR — form her belediyede aynı akışı
+ * işletir: tür + metin → fotoğraf (isteğe bağlı) → kimlik → SMS kodu → başarı.
  */
 
 /**
@@ -21,10 +20,11 @@ function FormIskeleti() {
   return (
     <div className="page-container">
       <div className="card">
-        <div className="steps">
-          <div className="step-dot active" />
-          <div className="step-dot" />
-          <div className="step-dot" />
+        <div className="ilerleme">
+          <span className="ilerleme-parca dolu" />
+          <span className="ilerleme-parca" />
+          <span className="ilerleme-parca" />
+          <span className="ilerleme-parca" />
         </div>
         <div style={{ textAlign: 'center', padding: '40px 0' }}>
           <span className="spinner" />

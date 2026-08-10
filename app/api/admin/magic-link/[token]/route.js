@@ -80,7 +80,7 @@ export async function POST(request, { params }) {
     // Yönlendirme hedefini yalnız `host` başlığından kur (x-forwarded-host değil; tenant.js
     // ile hizalı). Proto her zaman https (cloudflared tünel TLS).
     const host = request.headers.get('host');
-    const redirectUrl = new URL('/admin/harita', `https://${host}`);
+    const redirectUrl = new URL('/admin', `https://${host}`);
     const response = NextResponse.redirect(redirectUrl, 303); // 303: POST → GET yönlendirme
 
     response.cookies.set(GuvenlikSabitleri.ADMIN_CEREZ_ADI, sonuc.oturumTokeni, {

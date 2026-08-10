@@ -1,5 +1,5 @@
 {
-  "name": "sikayet-sistemi",
+  "name": "tekqr-gorus-oneri",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -34,8 +34,6 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
-    "leaflet": "^1.9.4",
-    "leaflet.markercluster": "^1.5.3",
     "qrcode": "^1.5.4",
     "tailwindcss": "^4"
   }

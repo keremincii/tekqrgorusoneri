@@ -1,44 +1,34 @@
 import { NextResponse } from 'next/server';
-import { getSikayetService, getPersonelService, getTelegramService, getAdminService } from '@/lib/services';
+import { getSikayetService, getPersonelService, getTelegramService, getBasvuruAkisServisi } from '@/lib/services';
 import { guvenliJsonParse } from '@/lib/security/sanitize';
-import { aktifTenant } from '@/lib/server/tenant';
+import { adminOturumKontrol } from '@/lib/server/adminOturum';
 
 /**
  * PATCH /api/admin/sikayetler/ata
  *
- * Bir şikayeti bir personele atar veya atamayı kaldırır (başkan tarafından).
+ * Bir başvuruyu bir personele atar veya atamayı kaldırır (başkan tarafından).
  * Mevcut durum-güncelleme PATCH'ini (/api/admin/sikayetler) kirletmemek için ayrı route.
  *
  * Gövde:
  *   { sikayetId, personelId }         → atar (durum beklemede ise inceleniyor'a geçer)
  *   { sikayetId, personelId: null }   → atamayı kaldırır
  *
- * Atamada, personele Telegram bildirimi gönderilir; yanıt `bildirimGonderildi`
- * bayrağıyla başkana bildirimin gidip gitmediğini bildirir (personel Telegram'a
- * bağlı değilse atama yine yapılır ama bildirim gitmez).
+ * ATAMA, SAHA EKİBİNE İŞ DÜŞMESİNİN TEK YOLUDUR: kategori ekseni olmadığı için
+ * otomatik dağıtım yoktur. Personele Telegram bildirimi burada gönderilir; yanıt
+ * `bildirimGonderildi` bayrağıyla başkana bildirimin gidip gitmediğini söyler
+ * (personel Telegram'a bağlı değilse atama yine yapılır ama bildirim gitmez).
  */
 export async function PATCH(request) {
   try {
-    const tenant = await aktifTenant(request);
-    if (!tenant) {
-      return NextResponse.json({ hata: 'Belediye bulunamadı.' }, { status: 404 });
-    }
-
-    const oturumCerezi = request.cookies.get('admin_oturum');
-    if (!oturumCerezi?.value) {
-      return NextResponse.json({ hata: 'Yetkisiz erişim.' }, { status: 401 });
-    }
-    const gecerli = await getAdminService().oturumDogrula(oturumCerezi.value, tenant.id);
-    if (!gecerli) {
-      return NextResponse.json({ hata: 'Oturum geçersiz.' }, { status: 401 });
-    }
+    const { tenant, hataYanit } = await adminOturumKontrol(request);
+    if (hataYanit) return hataYanit;
 
     const { veri, hata: parseHata } = await guvenliJsonParse(request);
     if (parseHata) return NextResponse.json({ hata: parseHata }, { status: 400 });
 
     const { sikayetId, personelId } = veri;
     if (!sikayetId) {
-      return NextResponse.json({ hata: 'Şikayet ID zorunludur.' }, { status: 400 });
+      return NextResponse.json({ hata: 'Başvuru ID zorunludur.' }, { status: 400 });
     }
 
     const sikayetService = getSikayetService();
@@ -49,6 +39,9 @@ export async function PATCH(request) {
       if (!sonuc.basarili) {
         return NextResponse.json({ hata: sonuc.hata }, { status: 400 });
       }
+      await getBasvuruAkisServisi()
+        .basvuruGuncellendi(sikayetId, tenant.id)
+        .catch((e) => console.error('canlı akış yayını hatası:', e));
       return NextResponse.json({ basarili: true, mesaj: 'Atama kaldırıldı.' });
     }
 
@@ -65,13 +58,18 @@ export async function PATCH(request) {
       return NextResponse.json({ hata: sonuc.hata }, { status: 400 });
     }
 
+    // Atama hem durumu hem "kime atandı" bilgisini değiştirir → açık paneller güncellensin.
+    await getBasvuruAkisServisi()
+      .basvuruGuncellendi(sikayetId, tenant.id)
+      .catch((e) => console.error('canlı akış yayını hatası:', e));
+
     // Telegram bildirimi (KVKK: vatandaş kimliği gönderilmez). Bildirim çökse de
     // atama kaydı sağlamdır — kullanıcıya sonuç bayrağıyla bilgi verilir.
     const bildirim = await getTelegramService().atamaBildir(sonuc.sikayet, personel);
 
     return NextResponse.json({
       basarili: true,
-      mesaj: 'Şikayet personele atandı.',
+      mesaj: 'Başvuru personele atandı.',
       bildirimGonderildi: bildirim.bildirimGonderildi,
       sebep: bildirim.sebep || null,
     });

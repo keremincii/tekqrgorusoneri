@@ -1,7 +1,7 @@
 {
-  "name": "Gülşehir Şikayet",
-  "short_name": "Şikayet",
-  "description": "Gülşehir Belediyesi Şikayet Takip Sistemi",
+  "name": "Görüş ve Öneri",
+  "short_name": "Görüş/Öneri",
+  "description": "Belediyeye şikayet, görüş ve öneri iletme sistemi",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0e1a",

@@ -78,26 +78,22 @@ services:
       retries: 10
 
   # ----------------------------------------------------------
-  # Veritabanı migration'ı (tek seferlik; app'ten önce çalışır)
+  # NOT — `migrate` SERVİSİ KALDIRILDI (bilerek). DOKUNMA.
   # ----------------------------------------------------------
-  migrate:
-    container_name: tekqr-migrate
-    build:
-      context: .
-      target: builder
-      args:
-        # builder aşaması `npm run build`'ı burada da çalıştırır (target: builder);
-        # app servisiyle AYNI arg olmalı yoksa BuildKit iki farklı builder katmanı
-        # cache'ler (gereksiz çift build + tutarsızlık riski).
-        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
-    command: npm run db:migrate
-    logging: *log-rotasyon
-    environment:
-      DATABASE_URL: postgresql://belediye:${DB_PASSWORD}@db:5432/belediye
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: "no"
+  # Burada `npm run db:migrate` (drizzle-kit migrate) çalıştıran bir servis vardı ve
+  # `app` ona `service_completed_successfully` ile bağlıydı. İKİ SEBEPLE YANLIŞTI:
+  #
+  #  1. ÇALIŞMIYORDU: drizzle-kit'in migrate komutu `drizzle/meta/_journal.json`
+  #     ister; bu projede migration'lar ELLE yazılan .sql dosyalarıdır (journal yok).
+  #     Servis her açılışta hata verirdi — ve app ona bağlı olduğu için UYGULAMA HİÇ
+  #     BAŞLAMAZDI. Sessiz değil, tam bir dağıtım kilidi.
+  #  2. SÖZLEŞMEYE AYKIRIYDI: README'nin kuralı "önce migration (elle), sonra kod".
+  #     Şema değişikliğini deploy'a otomatik iliştirmek, geri alınamayan bir DDL'i
+  #     gözden geçirmeden üretime sokmak demektir.
+  #
+  # Migration uygulama (kod deploy'undan ÖNCE, sırayla):
+  #   docker compose exec -T db psql -U belediye -d belediye -v ON_ERROR_STOP=1 < drizzle/0000_init.sql
+  #   docker compose exec -T db psql -U belediye -d belediye -v ON_ERROR_STOP=1 < drizzle/0001_kategorisiz.sql
 
   # ----------------------------------------------------------
   # Next.js uygulaması (standalone)
@@ -124,10 +120,10 @@ services:
       timeout: 5s
       retries: 3
       start_period: 40s
-    # Offline harita karoları: host'taki ./tiles klasörü salt-okunur bağlanır.
-    # İmaja gömülmez → yeni belediye eklerken sadece tiles/<slug> indirilir, rebuild yok.
-    volumes:
-      - ./tiles:/app/tiles:ro
+    # NOT: Eskiden host'taki ./tiles klasörü (offline harita karoları) buraya
+    # bağlanıyordu. Yönetim ekranındaki harita kaldırıldı (tek QR'lı üründe tüm
+    # başvurular aynı noktaya düşüyor, harita bilgi taşımıyordu) → karo sunucusu,
+    # Leaflet varlıkları ve bu bağlama da kaldırıldı.
     environment:
       DATABASE_URL: postgresql://belediye:${DB_PASSWORD}@db:5432/belediye
       DATABASE_SSL: "false"
@@ -153,6 +149,12 @@ services:
       # Ana alan adı: subdomain'den belediye (tenant) çözümü buna göre yapılır.
       # Ör. "sikayet.com" → gulsehir.sikayet.com = "gulsehir". .com.tr de desteklenir.
       APP_BASE_DOMAIN: ${APP_BASE_DOMAIN:?APP_BASE_DOMAIN gerekli (ör. sikayet.com)}
+      # QR'a BASILAN kök adres. Boş bırakılırsa kod "https://qr.<APP_BASE_DOMAIN>"
+      # türetir — ÇOK YIĞINLI kurulumda bu YANLIŞTIR: o kök başka bir yığının
+      # uygulamasına gider ve /q yönlendiricisi kodu KENDİ veritabanında arayacağı
+      # için 404 döner. Her yığın kendi kökünü açıkça vermelidir.
+      # DEĞİŞTİRME: basılı QR'lar bu adrese bağlıdır.
+      QR_BASE_URL: ${QR_BASE_URL:-}
       # Şikayet limiti (kimlik başına). Boşsa kod varsayılanı = 1 hafta içinde 1 şikayet.
       # Test/demo için .env'e SIKAYET_HAFTALIK_ADET=7 yaz (pencereyi SIKAYET_BEKLEME_MS ile kısalt).
       SIKAYET_HAFTALIK_ADET: ${SIKAYET_HAFTALIK_ADET:-}
@@ -196,8 +198,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
     # Not: Port host'a AÇILMAZ; origin'e tek erişim cloudflared tüneli üzerindendir.
 
   # ----------------------------------------------------------

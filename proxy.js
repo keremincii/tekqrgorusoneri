@@ -66,9 +66,11 @@ export function proxy(request) {
   }
 
   // 2. Admin sayfalarını koru (Magic Link ile giriş yapılmış mı?)
-  // Prefix '/admin' — yalnız '/admin/harita' DEĞİL: ileride eklenecek her admin sayfası da varsayılan
-  // olarak korumalı olmalı. Tek bir sayfayı adıyla saymak, yeni sayfayı sessizce
-  // herkese açık bırakan türden bir hatadır.
+  // Prefix '/admin' — tek tek sayfa adı DEĞİL: ileride eklenecek her admin sayfası da
+  // varsayılan olarak korumalı olmalı. Tek bir sayfayı adıyla saymak, yeni eklenen
+  // sayfayı sessizce herkese açık bırakan türden bir hatadır.
+  // NOT: Bu yalnız SAYFALARI korur ve çerezin VARLIĞINA bakar; /api/admin/* uçları
+  // çerezi ayrıca DOĞRULAR (lib/server/adminOturum.js).
   if (pathname.startsWith('/admin')) {
     const oturumCerezi = request.cookies.get('admin_oturum');
 

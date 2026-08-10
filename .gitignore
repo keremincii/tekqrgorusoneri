@@ -76,3 +76,6 @@ next-env.d.ts
 
 # Claude Code oturum dizini
 .claude/
+
+# Windows klasor ayar artigi (Explorer uretir, repoda isi yok)
+desktop.ini

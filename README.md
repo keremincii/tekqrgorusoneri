@@ -1,20 +1,44 @@
-# Tek QR — Görüş / Öneri Sistemi
+# Tek QR — Görüş / Şikayet / Öneri Sistemi
 
 Belediyenin **tek merkezî QR kodu** (ör. kent meydanı) okutulunca açılan başvuru formu.
-Vatandaş türünü seçer, yazar, isterse fotoğraf ekler; başvuru **başkanın ve yetkililerin**
-göreceği bir panele düşer.
+Vatandaş türünü seçip yazar, isterse fotoğraf ekler, telefonunu doğrular; başvuru
+**başkanın panosuna anında** düşer.
 
-Üç tür vardır ve **hepsi aynı akışı** kullanır:
+## Vatandaş akışı
+
+```
+QR → [tür + metin] → [fotoğraf — isteğe bağlı] → [ad soyad + telefon + KVKK] → [SMS kodu] → ✓
+```
+
+Üç tür vardır ve **hepsi aynı akışı, aynı tabloyu ve aynı KVKK esaslarını** kullanır:
 
 | Tür | Ne için |
 | --- | --- |
-| Şikayet | Bozuk / eksik / aksayan bir durum |
-| Görüş | Bir konudaki düşüncesi |
-| Öneri | İlçe için bir fikir |
+| ⚠️ Şikayet | Bozuk / eksik / aksayan bir durum |
+| 💬 Görüş | Bir konudaki düşüncesi |
+| 💡 Öneri | İlçe için bir fikir |
 
-**Vatandaşa kategori ve konum SORULMAZ.** Tek QR olduğu için "hangi sokak" sorusunun
-anlamı yok; kategori de olmadığından başvurular saha ekibine otomatik dağıtılmaz —
-karar yönetimindedir. Akış: **tür → açıklama → fotoğraf (opsiyonel) → doğrulama**.
+**Vatandaşa KATEGORİ ve KONUM sorulmaz.** Tek QR olduğu için "hangi sokak" sorusunun
+anlamı yok; 7 başlıklı kategori listesi de kaldırıldı — yazdığı cümle konuyu zaten
+söylüyor, sınıflandırmayı ona yaptırmak fazladan bir ekran ve yanlış seçime davetti.
+Kategori olmadığı için başvurular saha ekibine **otomatik dağıtılmaz**: iş dağıtımı
+yönetimin **atama** kararıdır.
+
+## Başkan panosu (`/admin`)
+
+Yenilemesiz, okuma odaklı tek ekran:
+
+- **Canlı** — yeni başvuru geldiği anda listeye düşer (Server-Sent Events). Sağ üstteki
+  "Canlı" rozeti bağlantının durumunu söyler; akış koparsa liste periyodik tazelenir.
+- **Tür sekmeleri** hem filtre hem özettir (her sekmede o türün açık kayıt sayısı).
+- **Durum filtresi + metin araması** sunucu tarafında çalışır, liste sayfalanır.
+- **Kart = başvuru metni.** Metin kırpılmaz; punto, kontrast ve satır aralığı okumaya
+  göre ayarlıdır. Fotoğraf, bekleme süresi, durum ve atama bilgisi metnin etrafındadır.
+- **Aksiyonlar:** durum ilerlet (Bekliyor → İnceleniyor → Çözüldü), personele ata,
+  fotoğrafı büyüt, sil. Atama, saha ekibine iş düşmesinin tek yoludur.
+
+> Eski harita ekranı kaldırıldı: tek QR'lı bir üründe tüm başvurular aynı koordinata
+> düşüyor, yani harita her zaman tek bir pin gösteriyordu.
 
 ## Nereden geliyor
 
@@ -36,6 +60,21 @@ git fetch gulsehir && git log gulsehir/main --oneline
 git cherry-pick <sha>
 ```
 
+## Mimari (kısa)
+
+```
+app/s/[qrId]/        Vatandaş sihirbazı (adım başına bir bileşen + tek API istemcisi)
+app/admin/           Başkan panosu (BasvuruPanosu + panel/*)
+app/api/admin/akis   Canlı akış (SSE) — oturum korumalı, tenant izole
+lib/domain/          Entity + arayüzler (Basvuru, ISikayetRepository, IOlayYayini)
+lib/services/        İş kuralları (SikayetService, BasvuruAkisServisi, Telegram…)
+lib/infrastructure/  DB (Drizzle), Redis, olay yayını, Telegram istemcisi
+lib/utils/constants  Tek otorite: başvuru türleri, durum sözlüğü, limitler, KVKK sürümü
+```
+
+Canlı akış, `IOlayYayini` arayüzünün arkasındadır: Redis varsa kopyalar arası pub/sub,
+yoksa süreç içi yayın kullanılır — çağıran hangisi olduğunu bilmez.
+
 ## Kurulum (VPS)
 
 > ⚠ Aynı sunucuda başka yığınlar çalışıyor (`belediye`, `mezarlik`). `docker-compose.yml`
@@ -56,9 +95,11 @@ git cherry-pick <sha>
    (`CLOUDFLARE_TUNNEL_TOKEN`), public hostname'i bu yığının `app:3000`'ine bağla.
    Sunucuda hiçbir inbound port açılmaz.
 
-3. **Şema.** Migration'lar **elle** uygulanır (`drizzle-kit generate/push` KULLANMA):
+3. **Şema.** Migration'lar **elle** uygulanır (`drizzle-kit generate/push` KULLANMA),
+   numara sırasıyla:
    ```bash
    docker compose exec -T db psql -U belediye -d belediye -v ON_ERROR_STOP=1 < drizzle/0000_init.sql
+   docker compose exec -T db psql -U belediye -d belediye -v ON_ERROR_STOP=1 < drizzle/0001_kategorisiz.sql
    ```
 
 4. **Belediye + QR noktası.**
@@ -73,7 +114,17 @@ git cherry-pick <sha>
    ```
 
 6. **Yönetici erişimi:** `node scripts/magic-link-uret.js <slug>` → 48 saat geçerli
-   tek kullanımlık giriş linki.
+   tek kullanımlık giriş linki (`/admin` panosuna düşürür).
+
+## Geliştirirken
+
+Panoyu dolu görmek için sahte başvuru üret (yalnız yerel/demo):
+
+```bash
+node scripts/test-basvuru-ekle.js <qr-nokta-uuid> 20
+```
+
+Panoyu açık tutarsan kartların tek tek düştüğünü görürsün — canlı akışın testi budur.
 
 ## Güncelleme
 

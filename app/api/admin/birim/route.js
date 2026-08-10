@@ -1,31 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getBirimService, getAdminService } from '@/lib/services';
+import { getBirimService } from '@/lib/services';
 import { guvenliJsonParse } from '@/lib/security/sanitize';
-import { aktifTenant } from '@/lib/server/tenant';
+import { adminOturumKontrol as oturumKontrol } from '@/lib/server/adminOturum';
 
 /**
- * Başkan oturumunu doğrular (tüm metotlarda ortak).
- * @returns {Promise<{tenant?: Object, hataYanit?: NextResponse}>}
- */
-async function oturumKontrol(request) {
-  const tenant = await aktifTenant(request);
-  if (!tenant) {
-    return { hataYanit: NextResponse.json({ hata: 'Belediye bulunamadı.' }, { status: 404 }) };
-  }
-  const oturumCerezi = request.cookies.get('admin_oturum');
-  if (!oturumCerezi?.value) {
-    return { hataYanit: NextResponse.json({ hata: 'Yetkisiz erişim.' }, { status: 401 }) };
-  }
-  const gecerli = await getAdminService().oturumDogrula(oturumCerezi.value, tenant.id);
-  if (!gecerli) {
-    return { hataYanit: NextResponse.json({ hata: 'Oturum geçersiz.' }, { status: 401 }) };
-  }
-  return { tenant };
-}
-
-/**
- * GET /api/admin/birim — Belediyenin birimlerini (kapsadıkları kategorilerle) listeler.
- * Yanıt: { birimler: [{ id, ad, kategoriler: string[] }] }
+ * GET /api/admin/birim — Belediyenin aktif birimlerini listeler.
+ * Yanıt: { birimler: [{ id, ad }] }
  */
 export async function GET(request) {
   try {
@@ -62,30 +42,11 @@ export async function POST(request) {
 }
 
 /**
- * PATCH /api/admin/birim — Bir birimin kapsadığı kategori kümesini AYARLAR (tam değiştirir).
- * Gövde: { birimId, kategoriler: string[] }
- * (PATCH kullanılıyor çünkü proxy.js yalnız GET/POST/PATCH/DELETE'e izin verir — PUT 405.)
- */
-export async function PATCH(request) {
-  try {
-    const { tenant, hataYanit } = await oturumKontrol(request);
-    if (hataYanit) return hataYanit;
-
-    const { veri, hata: parseHata } = await guvenliJsonParse(request);
-    if (parseHata) return NextResponse.json({ hata: parseHata }, { status: 400 });
-
-    const sonuc = await getBirimService().birimKategorileriAyarla(tenant.id, veri.birimId, veri.kategoriler);
-    if (!sonuc.basarili) return NextResponse.json({ hata: sonuc.hata }, { status: 400 });
-    return NextResponse.json({ basarili: true, kategoriler: sonuc.kategoriler });
-  } catch (err) {
-    console.error('Birim kategori ayarlama hatası:', err);
-    return NextResponse.json({ hata: 'İşlem başarısız.' }, { status: 500 });
-  }
-}
-
-/**
- * DELETE /api/admin/birim — Birimi pasifleştirir (kategori eşleşmeleri de silinir).
+ * DELETE /api/admin/birim — Birimi pasifleştirir. Personeller silinmez; birimsiz kalır.
  * Gövde: { birimId }
+ *
+ * (Kategori kümesi ayarlayan PATCH ucu KALDIRILDI: kategori ekseni bu üründe yok,
+ *  birim artık bir yönlendirme kuralı değil yalnızca gruplamadır.)
  */
 export async function DELETE(request) {
   try {

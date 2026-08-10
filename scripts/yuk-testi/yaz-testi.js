@@ -90,8 +90,8 @@ export default function () {
     sokakId: SOKAK_ID,
     sig: sig(SOKAK_ID),
     dogrulamaToken: dogrulamaToken(kimlikHash),
-    kategori: 'cop-temizlik',
-    aciklama: 'Yuk testi otomatik olusturulan sikayet aciklamasi.',
+    tur: 'sikayet',
+    aciklama: 'Yuk testi otomatik olusturulan basvuru metni.',
     kvkkOnay: true,
   });
 

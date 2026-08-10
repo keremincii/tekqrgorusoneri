@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import './globals.css';
 import { headers } from 'next/headers';
 import { hosttanSlug } from '@/lib/server/host.js';
@@ -6,20 +5,16 @@ import { tenantSlugIle } from '@/lib/server/tenant.js';
 
 /**
  * Sayfa başlığı/açıklaması PER-TENANT: subdomain'den (Host) belediye adı çözülür.
- * Eskiden build-time global siteConfig.belediyeAdi idi → tüm belediyelerin sekmesinde
- * AYNI ad görünürdü; artık her belediye kendi adını gösterir (çözülemezse genel başlık).
+ * Eskiden build-time global bir sabitti → tüm belediyelerin sekmesinde AYNI ad
+ * görünürdü; artık her belediye kendi adını gösterir (çözülemezse genel başlık).
  *
- * BAŞLIKTAKİ "Şikayet" KELİMESİ TENANT BAYRAĞINA BAĞLIDIR:
- * Tür seçimi AÇIK bir belediyede vatandaş teşekkür/öneri de gönderebilir; tarayıcı
- * sekmesinde ve PWA paylaşımında "Şikayet Sistemi" yazması o vatandaşa fiilen yanlış
- * bilgi verir ("burası yalnız şikayet yeri" izlenimi) — ölçülebilir biçimde teşekkür
- * göndermekten caydırır. Bayrak KAPALIYKEN (Gülşehir — canlı) başlık HARFİ HARFİNE
- * eskisi gibi kalır; hiçbir metin değişmez.
+ * BAŞLIKTA "ŞİKAYET" GEÇMEZ ve bu bilinçlidir: bu üründe vatandaş şikayetin yanı sıra
+ * GÖRÜŞ ve ÖNERİ de gönderir. Sekmede "Şikayet Sistemi" yazması, öneri yazmaya gelen
+ * vatandaşa "burası yalnız şikayet yeri" izlenimi verir ve fiilen caydırır.
  *
- * Not: /manifest.json burada ÜRETİLMEZ — `public/manifest.json` STATİK bir dosyadır ve
- * içindeki name/short_name/description sabit ("Gülşehir Şikayet") olduğu için belediyeye
- * duyarlı DEĞİLDİR; yani PWA olarak eklenen kısayolun adı her belediyede aynı görünür.
- * Düzeltilmesi için dosyanın dinamik bir `app/manifest.js` route'una taşınması gerekir.
+ * Not: /manifest.json burada ÜRETİLMEZ — `public/manifest.json` STATİK bir dosyadır;
+ * içindeki ad belediyeye duyarlı DEĞİLDİR. Duyarlı olması gerekirse dosyanın dinamik
+ * bir `app/manifest.js` route'una taşınması gerekir.
  */
 export async function generateMetadata() {
   let ad = null;
@@ -31,10 +26,10 @@ export async function generateMetadata() {
   } catch { /* Host çözülemedi → genel başlık */ }
 
   return {
-    title: ad ? `${ad} - Şikayet Sistemi` : 'Belediye Şikayet Sistemi',
+    title: ad ? `${ad} — Görüş ve Öneri Sistemi` : 'Belediye Görüş ve Öneri Sistemi',
     description: ad
-      ? `${ad} vatandaş şikayet takip ve yönetim sistemi.`
-      : 'Belediye vatandaş şikayet takip ve yönetim sistemi.',
+      ? `${ad} vatandaş şikayet, görüş ve öneri sistemi.`
+      : 'Belediye vatandaş şikayet, görüş ve öneri sistemi.',
     manifest: '/manifest.json',
   };
 }

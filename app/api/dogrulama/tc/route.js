@@ -93,7 +93,10 @@ export async function POST(request) {
     // Katman 4: Bot kapısı (Cloudflare Turnstile) — SMS üretiminden ÖNCE, NVİ SOAP'tan
     // önce. Otomatik kredi tüketimini/numara taramayı daha kapıda durdurur. Secret
     // tanımlı değilse geliştirmede otomatik atlanır (turnstileDogrula içinde).
-    const botSonuc = await turnstileDogrula(turnstileToken, ip);
+    // Host geçilir: site key/secret birden çok belediye arasında paylaşılıyorsa
+    // (ör. apex domain'e kurulu tek widget), başka bir belediyenin sayfasında
+    // üretilmiş bir token bu belediyenin ucunda KABUL EDİLMEZ (bkz. turnstile.js).
+    const botSonuc = await turnstileDogrula(turnstileToken, ip, request.headers.get('host'));
     if (!botSonuc.gecerli) {
       try {
         await getSmsLogRepository().kaydet({ tenantId: tenant.id, ipHash, sonuc: 'turnstile' });
@@ -105,8 +108,10 @@ export async function POST(request) {
 
     // Katman 4a-1: KARA LİSTE — engellenmiş numaraya SMS GÖNDERME. Telefon girilir girilmez
     // burada kesilir → engelli kişi boşuna SMS/kredi harcatamaz (nihai kapı /api/sikayet).
+    // Kontrol GLOBALDİR (tenant almaz): bu dağıtımdaki başka bir belediyede
+    // engellenmiş bir numara burada da reddedilir.
     try {
-      if (await getSikayetService().telefonEngelliMi(telefon, tenant.id)) {
+      if (await getSikayetService().telefonEngelliMi(telefon)) {
         return NextResponse.json({ hata: GENEL_RED_MESAJI, adim: 'red' }, { status: 403 });
       }
     } catch { /* patlarsa akışı bozma; nihai kapı /api/sikayet */ }

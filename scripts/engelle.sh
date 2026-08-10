@@ -37,15 +37,17 @@ case "$cmd" in
       ORDER BY s.olusturma_tarihi DESC LIMIT ${n};"
     ;;
   engelle)
+    # NOT: engelli_kimlikler artık TENANT'TAN BAĞIMSIZDIR (bkz. drizzle/0002).
+    # Bir kimliği burada engellemek, bu dağıtımdaki TÜM belediyeleri kapsar.
     id="${2:?sikayet-id gerekli — 'scripts/engelle.sh liste' ile bak}"
-    "${PSQL[@]}" -c "INSERT INTO engelli_kimlikler (tenant_id, kimlik_hash, sebep)
-      SELECT tenant_id, kimlik_hash, 'cli' FROM sikayetler WHERE id = '${id}'
+    "${PSQL[@]}" -c "INSERT INTO engelli_kimlikler (kimlik_hash, sebep)
+      SELECT kimlik_hash, 'cli' FROM sikayetler WHERE id = '${id}'
       ON CONFLICT DO NOTHING RETURNING kimlik_hash;"
-    echo "→ Engellendi (bir satır döndüyse). Bu numara artık SMS kodu / şikayet gönderemez."
+    echo "→ Engellendi (bir satır döndüyse). Bu numara artık HİÇBİR belediyeye SMS kodu / şikayet gönderemez."
     ;;
   engelliler)
     # Tam hash gösterilir → 'kaldir' için doğrudan kopyalanabilir.
-    "${PSQL[@]}" -c "SELECT tenant_id, kimlik_hash, sebep,
+    "${PSQL[@]}" -c "SELECT kimlik_hash, sebep,
         olusturma_tarihi::timestamp(0) AS tarih
       FROM engelli_kimlikler ORDER BY olusturma_tarihi DESC;"
     ;;
@@ -57,11 +59,11 @@ case "$cmd" in
         RETURNING left(kimlik_hash, 12) || '…';"
     else
       "${PSQL[@]}" -c "DELETE FROM engelli_kimlikler
-        WHERE (tenant_id, kimlik_hash) IN
-          (SELECT tenant_id, kimlik_hash FROM sikayetler WHERE id = '${arg}')
+        WHERE kimlik_hash IN
+          (SELECT kimlik_hash FROM sikayetler WHERE id = '${arg}')
         RETURNING left(kimlik_hash, 12) || '…';"
     fi
-    echo "→ Engel kaldırıldı (bir satır döndüyse)."
+    echo "→ Engel kaldırıldı (bir satır döndüyse; tüm belediyeler için geçerliydi)."
     ;;
   *)
     echo "Kullanım:"

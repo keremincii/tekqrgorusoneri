@@ -74,8 +74,9 @@ export default async function KvkkAydinlatmaSayfasi() {
             <strong>{KvkkSabitleri.VERI_ISLEYEN}</strong> tarafından sağlanmaktadır.
           </p>
           <p>
-            Bu metin, sistem üzerinden gönderdiğiniz <strong>şikayet</strong> başvurularının
-            tamamı için geçerlidir.
+            Bu metin, sistem üzerinden gönderdiğiniz <strong>şikayet, görüş ve öneri</strong>
+            {' '}başvurularının tamamı için geçerlidir. Üç tür de birebir aynı esaslarla işlenir:
+            aynı saklama süreleri, aynı alıcılar ve aynı aktarımlar geçerlidir.
           </p>
 
           <h3 style={{ color: 'var(--text-primary)', marginTop: 20 }}>İşlenen Kişisel Veriler</h3>
@@ -100,18 +101,18 @@ export default async function KvkkAydinlatmaSayfasi() {
               tamamlandıktan sonra yalnızca yukarıda anlatılan tek yönlü özeti tutulur.
               Belediyeniz sonuç bildirimi SMS&rsquo;i hizmetini kullanmamaktadır.</p>
           )}
-          <p>Kalıcı olarak saklanan veriler: <strong>başvuru içeriği</strong> (seçtiğiniz
-            konu/kategori, açıklama ve varsa eklediğiniz fotoğraf) ile
-            hash&rsquo;lenmiş işlem güvenliği kayıtları.</p>
+          <p>Kalıcı olarak saklanan veriler: <strong>başvuru içeriği</strong> (seçtiğiniz tür —
+            şikayet, görüş veya öneri —, yazdığınız metin ve varsa eklediğiniz fotoğraf) ile
+            hash&rsquo;lenmiş işlem güvenliği kayıtları. <strong>Sizden bir konu/kategori
+            seçmeniz istenmez</strong> ve böyle bir veri toplanmaz.</p>
 
           <h3 style={{ color: 'var(--text-primary)', marginTop: 20 }}>Konum Verisi</h3>
-          <p><strong>Cihazınızın konumu/GPS verisi alınmaz.</strong> Şikayetiniz,
-            cihazınızdan ölçülen bir konuma değil, <strong>okuttuğunuz QR koda önceden tanımlı sokak
-            konumuna</strong> işaretlenir; yönetici haritasında ve saha ekibine iletilen bildirimde
-            bu sabit sokak konumu görünür.</p>
+          <p><strong>Cihazınızın konumu/GPS verisi alınmaz</strong> ve sizden bir konum seçmeniz
+            istenmez. Başvurunuz, <strong>okuttuğunuz QR koduna önceden tanımlı sabit noktaya</strong>
+            {' '}bağlanır; yönetim ekranında ve saha ekibine iletilen bildirimde görünen konum budur.</p>
 
           <h3 style={{ color: 'var(--text-primary)', marginTop: 20 }}>İşleme Amaçları</h3>
-          <p>Şikayetinizin alınması, değerlendirilmesi ve çözüme kavuşturulması;
+          <p>Başvurunuzun alınması, değerlendirilmesi ve sonuçlandırılması;
             mükerrer/sahte başvuruların ve kötüye kullanımın
             önlenmesi; hizmet ve sistem güvenliğinin sağlanması. Telefon numaranızın <strong>tek
             yönlü özeti</strong>, yalnızca mükerrer başvuru sınırının uygulanması ve
@@ -143,12 +144,14 @@ export default async function KvkkAydinlatmaSayfasi() {
           <p>Verileriniz, başvurunuzla ilgilenmek üzere ilgili belediye birimleriyle ve sistemin
             çalışması için hizmet alınan teknik sağlayıcılarla paylaşılır:</p>
           <ul style={{ margin: '8px 0', paddingLeft: 20 }}>
-            <li><strong>Saha ekibine yönlendirme:</strong> şikayet konusu, açıklama, (varsa)
-              fotoğraf ve sokak konumu, görevli personele bir mesajlaşma servisi (Telegram)
-              üzerinden iletilir.</li>
             <li><strong>Yönetim bilgilendirmesi:</strong> belediye başkanı ve başkan
-              yardımcısına, aynı mesajlaşma servisi (Telegram) üzerinden bilgi amaçlı bir bildirim
+              yardımcısına, bir mesajlaşma servisi (Telegram) üzerinden bilgi amaçlı bir bildirim
               gönderilir. Bu nedenle aşağıdaki yurt dışı aktarım söz konusudur.</li>
+            <li><strong>Saha ekibine yönlendirme:</strong> başvurunuz saha ekibine
+              <strong> otomatik olarak dağıtılmaz</strong>. Yalnızca yönetim, başvuruyu görevli bir
+              personele <strong>atadığında</strong>; başvurunun türü, yazdığınız metin, (varsa)
+              fotoğraf ve QR noktasının konumu o personele aynı mesajlaşma servisi (Telegram)
+              üzerinden iletilir.</li>
             {/*
               GERÇEK DAVRANIŞ: ModerasyonService, filtreye takılan kaydı TEK bir moderasyon
               sohbetine düşürür (TELEGRAM_MODERASYON_CHAT_ID) ve bu sohbet birden çok
@@ -173,7 +176,7 @@ export default async function KvkkAydinlatmaSayfasi() {
           </ul>
           <p><strong>Ad, soyad ve telefon gibi kimlik bilgileriniz ne saha ekibiyle ne de yönetimle
             paylaşılır.</strong> Bu mesajlaşma servisi (Telegram) yurt dışında barındırıldığından,
-            iletilen şikayet konusu, açıklama, (varsa) fotoğraf ve konum bilgisi{' '}
+            iletilen başvuru türü, metin, (varsa) fotoğraf ve konum bilgisi{' '}
             <strong>KVKK m.9 kapsamında yurt dışına aktarılmış</strong>
             {' '}olur; bu aktarıma, formdaki ayrı açık rıza kutusunu işaretleyerek rıza vermiş
             olursunuz. Yasal olarak
