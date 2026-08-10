@@ -456,7 +456,35 @@ html, body {
   line-height: 1;
 }
 
-/* ---------- KVKK onay kutuları ---------- */
+/* ---------- Alan içi doğrulama uyarısı ---------- */
+/*
+  Uyarı, eksik alanın HEMEN ALTINDA çıkar (kartın üstünde tek bir genel uyarı yerine).
+  Gerekçe: telefonda genel uyarı çoğu zaman görüş alanının dışında kalıyor ve kullanıcı
+  "butona bastım, bir şey olmadı" deyip akıştan düşüyordu (bkz. AlanHatasi.js).
+*/
+.form-input.hatali {
+  border-color: var(--accent-rose);
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12);
+}
+
+.alan-hatasi {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-top: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #fda4af;
+  animation: hataBelir 0.2s ease-out;
+}
+
+@keyframes hataBelir {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- KVKK onay kutusu ---------- */
 .onay-kutulari {
   display: flex;
   flex-direction: column;
@@ -464,6 +492,11 @@ html, body {
   margin-top: 4px;
 }
 
+/*
+  Kenarlık ve dolgu HATASIZ durumda da vardır (şeffaf): hata belirdiğinde yalnız renk
+  değişir, kutu büyümez — aksi halde uyarı çıkarken form altındaki her şey aşağı
+  kayar ve kullanıcı bastığı butonu kaybeder.
+*/
 .onay-satiri {
   display: flex;
   align-items: flex-start;
@@ -472,6 +505,15 @@ html, body {
   font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.55;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.onay-satiri.hatali {
+  border-color: var(--accent-rose);
+  background: rgba(244, 63, 94, 0.07);
 }
 
 .onay-satiri input[type='checkbox'] {

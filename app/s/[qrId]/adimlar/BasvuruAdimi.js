@@ -2,6 +2,7 @@
 
 import { BasvuruTurleri, TurTablosu } from '@/lib/utils/constants';
 import { ACIKLAMA_MAX } from '@/lib/utils/validators';
+import AlanHatasi from './AlanHatasi';
 
 /**
  * ADIM 1 — "Görüş, şikayet veya öneri girin"
@@ -18,9 +19,9 @@ import { ACIKLAMA_MAX } from '@/lib/utils/validators';
  *
  * Yalnız GÖRÜNÜM sorumluluğu taşır: doğrulama ve gönderim üst bileşendedir.
  */
-export default function BasvuruAdimi({ tur, onTur, metin, onMetin, onDevam }) {
+export default function BasvuruAdimi({ tur, onTur, metin, onMetin, onDevam, alanHatasi, metinRef }) {
   const secili = TurTablosu[tur];
-  const yazildi = metin.trim().length > 0;
+  const hataliMi = alanHatasi?.alan === 'metin';
 
   return (
     <>
@@ -61,24 +62,24 @@ export default function BasvuruAdimi({ tur, onTur, metin, onMetin, onDevam }) {
       </label>
       <textarea
         id="basvuruMetni"
-        className="form-input form-textarea"
+        ref={metinRef}
+        className={`form-input form-textarea${hataliMi ? ' hatali' : ''}`}
         placeholder={secili?.ornek || ''}
         value={metin}
         onChange={(e) => onMetin(e.target.value)}
         maxLength={ACIKLAMA_MAX}
         rows={6}
+        aria-invalid={hataliMi}
         style={{ minHeight: 150, fontSize: 16 }}
       />
       <div className="sayac-satiri">
         <span>{metin.length}/{ACIKLAMA_MAX}</span>
       </div>
+      {hataliMi && <AlanHatasi mesaj={alanHatasi.mesaj} />}
 
-      <button
-        type="button"
-        className="btn btn-primary"
-        onClick={onDevam}
-        disabled={!yazildi}
-      >
+      {/* Buton PASİF DEĞİL: boş bırakılırsa metnin altında uyarı çıkar. Pasif buton
+          kullanıcıya neden ilerleyemediğini söylemez (bkz. KimlikAdimi). */}
+      <button type="button" className="btn btn-primary" onClick={onDevam}>
         Devam Et →
       </button>
     </>

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { VARSAYILAN_TUR, FotografSabitleri } from '@/lib/utils/constants';
+import { VARSAYILAN_TUR, FotografSabitleri, GuvenlikSabitleri } from '@/lib/utils/constants';
+import { telefonGecerliMi } from '@/lib/utils/validators';
 import { cihazParmakIziAl } from './cihazParmakIzi';
 import * as api from './basvuruIstemcisi';
 import BasvuruAdimi from './adimlar/BasvuruAdimi';
@@ -59,7 +60,16 @@ export default function SikayetFormu() {
   // --- Sihirbaz konumu ---
   const [adim, setAdim] = useState('basvuru');
   const [yukleniyor, setYukleniyor] = useState(false);
+  /**
+   * İKİ AYRI HATA KANALI (bilinçli):
+   *  - `hata`       : sunucu/ağ hatası. Kartın üstünde genel uyarı olarak çıkar.
+   *  - `alanHatasi` : {alan, mesaj} — EKSİK/GEÇERSİZ FORM ALANI. Alanın hemen altında
+   *                   çıkar ve o alan odaklanır. Telefonda kartın üstündeki genel bir
+   *                   uyarı çoğu zaman ekranın dışında kalıyor ve kullanıcı "butona
+   *                   bastım, bir şey olmadı" deyip akıştan düşüyordu.
+   */
   const [hata, setHata] = useState('');
+  const [alanHatasi, setAlanHatasi] = useState(null);
 
   // --- Başvuru içeriği (sunucuya yalnız doğrulama sonrası gider) ---
   const [tur, setTur] = useState(VARSAYILAN_TUR);
@@ -73,7 +83,12 @@ export default function SikayetFormu() {
   const [adSoyad, setAdSoyad] = useState('');
   const [telefon, setTelefon] = useState('');
   const [kod, setKod] = useState('');
-  const [aydinlatmaOkundu, setAydinlatmaOkundu] = useState(false);
+  /**
+   * TEK ONAY KUTUSU (v17): "Aydınlatma Metni'ni okudum, anladım ve kabul ediyorum."
+   * Daha önce (v13) aydınlatma ile yurt dışı aktarıma açık rıza AYRI iki kutuydu;
+   * ürün sahibi kararıyla birleştirildi. Aydınlatma metninin kendisi (/kvkk)
+   * DEĞİŞMEDİ. Gerekçe ve kalıcı çözüm: constants.js → KvkkSabitleri (v17 notu).
+   */
   const [kvkkOnay, setKvkkOnay] = useState(false);
 
   // --- Bot kapısı / cihaz parmak izi ---
@@ -88,6 +103,36 @@ export default function SikayetFormu() {
   // --- Başarı ekranı bilgileri (tenant'a özel; kişisel veri değil) ---
   const [belediyeAdi, setBelediyeAdi] = useState('');
   const [baskanAdi, setBaskanAdi] = useState('');
+
+  /**
+   * Eksik alana ODAKLANABİLMEK için alan referansları. Uyarıyı göstermek tek başına
+   * yetmez: kullanıcı sayfanın altındaki butona basmışsa, eksik alan yukarıda ekran
+   * dışında kalabilir. Hata anında hem odaklanır hem görünüre kaydırılır.
+   *
+   * Tek tek tutulurlar (bir `refler` nesnesinde toplanmazlar): ref'i nesne özelliği
+   * olarak alt bileşene geçirmek, React'in "render sırasında ref'e erişme" kuralını
+   * ihlal eder ve derleyici bunu hata sayar.
+   */
+  const metinRef = useRef(null);
+  const adSoyadRef = useRef(null);
+  const telefonRef = useRef(null);
+  const kvkkOnayRef = useRef(null);
+  const kodRef = useRef(null);
+
+  /**
+   * Alan adı → referans. YALNIZ olay işleyicilerinden (alanUyar) çağrılır; render
+   * sırasında çağrılmaz, dolayısıyla ref kuralını ihlal etmez.
+   */
+  function alanRefi(alan) {
+    switch (alan) {
+      case 'metin': return metinRef;
+      case 'adSoyad': return adSoyadRef;
+      case 'telefon': return telefonRef;
+      case 'kvkkOnay': return kvkkOnayRef;
+      case 'kod': return kodRef;
+      default: return null; // ör. 'turnstile' — odaklanacak kendi alanımız yok
+    }
+  }
 
   /**
    * Object URL'i temizlemek için son değerin aynası. Temizlik effect'i state'e
@@ -122,10 +167,39 @@ export default function SikayetFormu() {
 
   const adimIndeksi = ADIMLAR.indexOf(adim);
 
-  /** Adı verilen adıma geçer ve önceki hata mesajını temizler. */
+  /** Adı verilen adıma geçer ve önceki hata mesajlarını temizler. */
   function adimaGit(hedef) {
     setHata('');
+    setAlanHatasi(null);
     setAdim(hedef);
+  }
+
+  /**
+   * Eksik/geçersiz alanı işaretler: uyarıyı alanın altına koyar, alanı odaklar ve
+   * görünüre kaydırır. `false` döner ki çağıran `if (!alanUyar(...)) return;`
+   * biçiminde kısa yazabilsin.
+   */
+  function alanUyar(alan, mesaj) {
+    setAlanHatasi({ alan, mesaj });
+    const el = alanRefi(alan)?.current;
+    if (el) {
+      // preventScroll + scrollIntoView: odaklanma anında sayfanın sertçe zıplaması
+      // yerine yumuşak kaydırma (mobilde çok daha az sarsıcı).
+      el.focus({ preventScroll: true });
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return false;
+  }
+
+  /**
+   * Kullanıcı bir alanı düzeltmeye başlayınca o alanın uyarısı kalkar — hata mesajı,
+   * kişi zaten düzeltirken ekranda durup suçlamaya devam etmemeli.
+   */
+  function alanDegisti(alan, ayarla) {
+    return (deger) => {
+      if (alanHatasi?.alan === alan) setAlanHatasi(null);
+      ayarla(deger);
+    };
   }
 
   /** Bir önceki adıma döner (ilk adımda etkisizdir). */
@@ -186,35 +260,44 @@ export default function SikayetFormu() {
   /** Adım "basvuru" → "foto": metin zorunlu (kategori yok, içerik metindir). */
   function basvuruyuOnayla() {
     if (!metin.trim()) {
-      setHata('Lütfen iletmek istediğinizi yazın.');
+      alanUyar('metin', 'Lütfen iletmek istediğinizi buraya yazın.');
       return;
     }
     adimaGit('foto');
   }
 
-  /** Adım "kimlik": bilgileri doğrula ve SMS kodu gönder. */
+  /**
+   * Adım "kimlik": bilgileri doğrula ve SMS kodu gönder.
+   *
+   * Doğrulama sırası EKRANDAKİ SIRAYLA aynıdır (ad → telefon → onay → bot kapısı):
+   * kullanıcı birden çok alanı boş bıraktıysa, en üstteki eksiğe yönlendirilir;
+   * düzeltip tekrar bastığında bir sonrakine iner. Rastgele sırada uyarmak,
+   * formda ileri geri zıplatır.
+   */
   async function kimlikGonder(e) {
     e.preventDefault();
     setHata('');
+    setAlanHatasi(null);
 
-    if (!aydinlatmaOkundu) {
-      setHata('Devam etmek için Aydınlatma Metni onayını işaretleyin.');
-      return;
-    }
-    if (!kvkkOnay) {
-      setHata('Başvurunuzu alabilmemiz için yurt dışı aktarımına açık rıza onayı gereklidir.');
-      return;
-    }
-    if (TURNSTILE_SITE_KEY && !turnstileToken) {
-      setHata('Lütfen "Ben robot değilim" doğrulamasını tamamlayın.');
-      return;
-    }
-    // Soyadsız girişte sunucuya gitmeden uyar (sunucu "Ad, Soyad ve Telefon zorunludur"
-    // derdi — burada daha anlaşılır).
+    // Soyadsız girişte sunucuya gitmeden uyar (sunucu "Ad, Soyad ve Telefon
+    // zorunludur" derdi — burada daha anlaşılır ve alanı işaret eder).
     const { ad, soyad } = adSoyadAyir(adSoyad);
-    if (!ad || !soyad) {
-      setHata('Lütfen adınızı ve soyadınızı birlikte yazın.');
-      return;
+    if (!adSoyad.trim()) return alanUyar('adSoyad', 'Lütfen adınızı ve soyadınızı yazın.');
+    if (!ad || !soyad) return alanUyar('adSoyad', 'Adınızı ve soyadınızı birlikte yazın (örn. Ayşe Yılmaz).');
+
+    if (!telefon.trim()) return alanUyar('telefon', 'Lütfen telefon numaranızı yazın.');
+    // Biçim kontrolü İSTEMCİDE de yapılır: geçersiz numara sunucuya gidip SMS
+    // üretmeye çalışmadan burada durur (boşa Netgsm kredisi yanmasın).
+    if (!telefonGecerliMi(telefon)) {
+      return alanUyar('telefon', 'Telefon numarası geçerli görünmüyor. 05XX XXX XX XX biçiminde yazın.');
+    }
+
+    if (!kvkkOnay) {
+      return alanUyar('kvkkOnay', 'Devam edebilmek için Aydınlatma Metni onayını işaretleyin.');
+    }
+
+    if (TURNSTILE_SITE_KEY && !turnstileToken) {
+      return alanUyar('turnstile', 'Lütfen "Ben robot değilim" doğrulamasını tamamlayın.');
     }
 
     setYukleniyor(true);
@@ -247,6 +330,14 @@ export default function SikayetFormu() {
   async function koduDogrulaVeGonder(e) {
     e.preventDefault();
     setHata('');
+    setAlanHatasi(null);
+
+    const uzunluk = GuvenlikSabitleri.SMS_KOD_UZUNLUGU;
+    if (!kod.trim()) return alanUyar('kod', 'Telefonunuza gelen kodu girin.');
+    if (kod.length !== uzunluk) {
+      return alanUyar('kod', `Kod ${uzunluk} haneli olmalı — ${kod.length} hane girdiniz.`);
+    }
+
     setYukleniyor(true);
 
     try {
@@ -350,8 +441,10 @@ export default function SikayetFormu() {
             tur={tur}
             onTur={setTur}
             metin={metin}
-            onMetin={setMetin}
+            onMetin={alanDegisti('metin', setMetin)}
             onDevam={basvuruyuOnayla}
+            alanHatasi={alanHatasi}
+            metinRef={metinRef}
           />
         )}
 
@@ -369,20 +462,21 @@ export default function SikayetFormu() {
         {adim === 'kimlik' && (
           <KimlikAdimi
             adSoyad={adSoyad}
-            onAdSoyad={setAdSoyad}
+            onAdSoyad={alanDegisti('adSoyad', setAdSoyad)}
             telefon={telefon}
-            onTelefon={setTelefon}
-            aydinlatmaOkundu={aydinlatmaOkundu}
-            onAydinlatma={setAydinlatmaOkundu}
+            onTelefon={alanDegisti('telefon', setTelefon)}
             kvkkOnay={kvkkOnay}
-            onKvkkOnay={setKvkkOnay}
+            onKvkkOnay={alanDegisti('kvkkOnay', setKvkkOnay)}
             turnstileSiteKey={TURNSTILE_SITE_KEY}
             turnstileNonce={turnstileNonce}
-            turnstileToken={turnstileToken}
-            onTurnstileToken={setTurnstileToken}
+            onTurnstileToken={alanDegisti('turnstile', setTurnstileToken)}
             yukleniyor={yukleniyor}
             onGonder={kimlikGonder}
             onGeri={geriGit}
+            alanHatasi={alanHatasi}
+            adSoyadRef={adSoyadRef}
+            telefonRef={telefonRef}
+            kvkkOnayRef={kvkkOnayRef}
           />
         )}
 
@@ -390,13 +484,15 @@ export default function SikayetFormu() {
           <KodAdimi
             telefon={telefon}
             kod={kod}
-            onKod={setKod}
+            onKod={alanDegisti('kod', setKod)}
             yukleniyor={yukleniyor}
             onDogrula={koduDogrulaVeGonder}
             geriSayim={geriSayim}
             gonderLimiti={gonderLimiti}
             onTekrarGonder={koduTekrarGonder}
             onGeri={() => { setKod(''); setGeriSayim(0); adimaGit('kimlik'); }}
+            alanHatasi={alanHatasi}
+            kodRef={kodRef}
           />
         )}
 
