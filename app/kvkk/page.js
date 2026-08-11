@@ -145,12 +145,12 @@ export default async function KvkkAydinlatmaSayfasi() {
             çalışması için hizmet alınan teknik sağlayıcılarla paylaşılır:</p>
           <ul style={{ margin: '8px 0', paddingLeft: 20 }}>
             <li><strong>Yönetim bilgilendirmesi:</strong> belediye başkanı ve başkan
-              yardımcısına, bir mesajlaşma servisi (Telegram) üzerinden bilgi amaçlı bir bildirim
+              yardımcısına, bir mesajlaşma servisi üzerinden bilgi amaçlı bir bildirim
               gönderilir. Bu nedenle aşağıdaki yurt dışı aktarım söz konusudur.</li>
             <li><strong>Saha ekibine yönlendirme:</strong> başvurunuz saha ekibine
               <strong> otomatik olarak dağıtılmaz</strong>. Yalnızca yönetim, başvuruyu görevli bir
               personele <strong>atadığında</strong>; başvurunun türü, yazdığınız metin, (varsa)
-              fotoğraf ve QR noktasının konumu o personele aynı mesajlaşma servisi (Telegram)
+              fotoğraf ve QR noktasının konumu o personele aynı mesajlaşma servisi
               üzerinden iletilir.</li>
             {/*
               GERÇEK DAVRANIŞ: ModerasyonService, filtreye takılan kaydı TEK bir moderasyon
@@ -169,13 +169,13 @@ export default async function KvkkAydinlatmaSayfasi() {
               ifade içerip içermediği bakımından otomatik bir filtreden geçirilir. Filtreye takılan
               başvurular yayıma alınmadan önce, sistemi belediye adına işleten veri işleyenin
               {' '}(<strong>{KvkkSabitleri.VERI_ISLEYEN}</strong>){' '}
-              <strong>moderasyon ekibine</strong> — yine aynı mesajlaşma servisi (Telegram)
+              <strong>moderasyon ekibine</strong> — yine aynı mesajlaşma servisi
               üzerinden — iletilir ve bir kişi tarafından incelenir. Bu incelemede yalnızca
               başvurunun metni görülür; <strong>kimlik bilgileriniz iletilmez.</strong>
               Uygun bulunan başvuru normal akışına devam eder.</li>
           </ul>
           <p><strong>Ad, soyad ve telefon gibi kimlik bilgileriniz ne saha ekibiyle ne de yönetimle
-            paylaşılır.</strong> Bu mesajlaşma servisi (Telegram) yurt dışında barındırıldığından,
+            paylaşılır.</strong> Bu mesajlaşma servisi yurt dışında barındırıldığından,
             iletilen başvuru türü, metin, (varsa) fotoğraf ve konum bilgisi{' '}
             <strong>KVKK m.9 kapsamında yurt dışına aktarılmış</strong>
             {' '}olur; bu aktarıma, formdaki ayrı açık rıza kutusunu işaretleyerek rıza vermiş
@@ -198,7 +198,7 @@ export default async function KvkkAydinlatmaSayfasi() {
           <h3 style={{ color: 'var(--text-primary)', marginTop: 20 }}>Sistemin Barındırılması ve Yurt Dışı Aktarım</h3>
           <p>Bu sistem, belediye adına hareket eden veri işleyen {KvkkSabitleri.VERI_ISLEYEN}
             {' '}tarafından, <strong>{KvkkSabitleri.BARINDIRMA_ULKE}&rsquo;da bulunan
-            {' '}{KvkkSabitleri.BARINDIRMA_SAGLAYICI} adlı sağlayıcının sunucularında
+            {' '}bir sağlayıcının sunucularında
             barındırılmaktadır.</strong> Dolayısıyla başvurunuzla
             birlikte verdiğiniz ve yukarıda sayılan tüm veriler — başvuru içeriği, fotoğraf,
             telefon numaranızın tek yönlü özeti{smsAcik ? ' ve şifreli telefon numaranız' : ''} dâhil —
@@ -207,7 +207,7 @@ export default async function KvkkAydinlatmaSayfasi() {
             Avrupa Birliği mevzuatına tabidir.</p>
           <ul style={{ margin: '8px 0', paddingLeft: 20 }}>
             <li><strong>Fotoğraflar</strong> ayrıca, yurt dışı merkezli bir bulut depolama
-              hizmetinde (Cloudflare R2) tutulur.</li>
+              hizmetinde tutulur.</li>
             {/*
               DÜRÜST SIRALAMA: IP, Turnstile yüzünden değil, sitenin Cloudflare üzerinden
               yayınlanması nedeniyle SAYFA AÇILIR AÇILMAZ sağlayıcıya ulaşır. Bunu yalnız
@@ -215,16 +215,16 @@ export default async function KvkkAydinlatmaSayfasi() {
               düzeltmeyen bir çözüme yol açardı — sayfa zaten oradan geçiyor.
             */}
             <li><strong>Site altyapısı ve bot koruması:</strong> bu sayfa ve başvuru formu,
-              saldırı koruması sağlayan yurt dışı merkezli bir altyapı sağlayıcısı (Cloudflare)
+              saldırı koruması sağlayan yurt dışı merkezli bir altyapı sağlayıcısı
               üzerinden yayınlanır. Bu nedenle <strong>IP adresiniz ve tarayıcınıza ilişkin teknik
               sinyaller, siz henüz hiçbir bilgi girmeden, sayfayı açtığınız anda</strong> bu
-              sağlayıcı tarafından işlenir. Aynı sağlayıcının Turnstile adlı aracı, formda
+              sağlayıcı tarafından işlenir. Aynı sağlayıcının bot koruma aracı, formda
               otomatik/robot başvuruları engellemek için aynı verileri kullanır. Bu veriler
               yalnızca güvenlik ve &ldquo;insan mısınız&rdquo; kontrolü amacıyla işlenir;
               başvurunuzun içeriği bu araca gönderilmez.</li>
             <li><strong>Saha ekibi ve yönetim bildirimleri</strong> ile <strong>içerik
               moderasyonu</strong>, yukarıda açıklandığı üzere yurt dışında barındırılan bir
-              mesajlaşma servisi (Telegram) üzerinden yürütülür.</li>
+              mesajlaşma servisi üzerinden yürütülür.</li>
           </ul>
           <p style={{ fontSize: 13, color: 'var(--text-muted)' }}><strong>Başvurunuzla birlikte
             verdiğiniz</strong> verilerin yurt dışına aktarılması, &ldquo;Toplama Yöntemi ve Hukuki
