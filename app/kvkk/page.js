@@ -68,7 +68,7 @@ export default async function KvkkAydinlatmaSayfasi() {
         <div style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.8 }}>
           <p>
             6698 sayılı Kişisel Verilerin Korunması Kanunu (&ldquo;KVKK&rdquo;) kapsamında,
-            başvurunuzda verdiğiniz kişisel veriler <strong>{veriSorumlusu}</strong> (&ldquo;veri
+            başvurunuzda verdiğiniz kişisel veriler <strong>{veriSorumlusu}</strong>{' '}(&ldquo;veri
             sorumlusu&rdquo;) tarafından aşağıda açıklanan çerçevede işlenmektedir. Sistemin teknik
             altyapısı, belediye adına ve talimatları doğrultusunda hareket eden veri işleyen{' '}
             <strong>{KvkkSabitleri.VERI_ISLEYEN}</strong> tarafından sağlanmaktadır.
@@ -101,7 +101,7 @@ export default async function KvkkAydinlatmaSayfasi() {
               tamamlandıktan sonra yalnızca yukarıda anlatılan tek yönlü özeti tutulur.
               Belediyeniz sonuç bildirimi SMS&rsquo;i hizmetini kullanmamaktadır.</p>
           )}
-          <p>Kalıcı olarak saklanan veriler: <strong>başvuru içeriği</strong> (seçtiğiniz tür —
+          <p>Kalıcı olarak saklanan veriler: <strong>başvuru içeriği</strong>{' '}(seçtiğiniz tür —
             şikayet, görüş veya öneri —, yazdığınız metin ve varsa eklediğiniz fotoğraf) ile
             hash&rsquo;lenmiş işlem güvenliği kayıtları. <strong>Sizden bir konu/kategori
             seçmeniz istenmez</strong> ve böyle bir veri toplanmaz.</p>
@@ -171,14 +171,14 @@ export default async function KvkkAydinlatmaSayfasi() {
               {' '}(<strong>{KvkkSabitleri.VERI_ISLEYEN}</strong>){' '}
               <strong>moderasyon ekibine</strong> — yine aynı mesajlaşma servisi
               üzerinden — iletilir ve bir kişi tarafından incelenir. Bu incelemede yalnızca
-              başvurunun metni görülür; <strong>kimlik bilgileriniz iletilmez.</strong>
+              başvurunun metni görülür; <strong>kimlik bilgileriniz iletilmez.</strong>{' '}
               Uygun bulunan başvuru normal akışına devam eder.</li>
           </ul>
           <p><strong>Ad, soyad ve telefon gibi kimlik bilgileriniz ne saha ekibiyle ne de yönetimle
             paylaşılır.</strong> Bu mesajlaşma servisi yurt dışında barındırıldığından,
             iletilen başvuru türü, metin, (varsa) fotoğraf ve konum bilgisi{' '}
             <strong>KVKK m.9 kapsamında yurt dışına aktarılmış</strong>
-            {' '}olur; bu aktarıma, formdaki ayrı açık rıza kutusunu işaretleyerek rıza vermiş
+            {' '}olur; bu aktarıma, formdaki onay kutusunu işaretleyerek rıza vermiş
             olursunuz. Yasal olarak
             yetkili merciler tarafından talep edilmesi hâlinde mevzuat gereği ilgili kurumlara
             aktarılabilir. Verileriniz pazarlama amacıyla üçüncü kişilerle paylaşılmaz.</p>
@@ -217,7 +217,7 @@ export default async function KvkkAydinlatmaSayfasi() {
             <li><strong>Site altyapısı ve bot koruması:</strong> bu sayfa ve başvuru formu,
               saldırı koruması sağlayan yurt dışı merkezli bir altyapı sağlayıcısı
               üzerinden yayınlanır. Bu nedenle <strong>IP adresiniz ve tarayıcınıza ilişkin teknik
-              sinyaller, siz henüz hiçbir bilgi girmeden, sayfayı açtığınız anda</strong> bu
+              sinyaller, siz henüz hiçbir bilgi girmeden, sayfayı açtığınız anda</strong>{' '}bu
               sağlayıcı tarafından işlenir. Aynı sağlayıcının bot koruma aracı, formda
               otomatik/robot başvuruları engellemek için aynı verileri kullanır. Bu veriler
               yalnızca güvenlik ve &ldquo;insan mısınız&rdquo; kontrolü amacıyla işlenir;
@@ -227,7 +227,7 @@ export default async function KvkkAydinlatmaSayfasi() {
               mesajlaşma servisi üzerinden yürütülür.</li>
           </ul>
           <p style={{ fontSize: 13, color: 'var(--text-muted)' }}><strong>Başvurunuzla birlikte
-            verdiğiniz</strong> verilerin yurt dışına aktarılması, &ldquo;Toplama Yöntemi ve Hukuki
+            verdiğiniz</strong>{' '}verilerin yurt dışına aktarılması, &ldquo;Toplama Yöntemi ve Hukuki
             Sebep&rdquo; başlığında belirtilen <strong>açık rızanıza</strong> dayanır; formdaki
             ilgili onay kutusunu işaretlemeden başvurunuz alınmaz. Açık rıza vermek istemezseniz
             belediyenin diğer başvuru kanallarını (yazılı başvuru, çağrı merkezi vb.)
@@ -253,7 +253,7 @@ export default async function KvkkAydinlatmaSayfasi() {
           )}
 
           <h3 style={{ color: 'var(--text-primary)', marginTop: 20 }}>Saklama Süresi</h3>
-          <p><strong>Ad ve soyadınız</strong> doğrulama tamamlanır tamamlanmaz kalıcı olarak
+          <p><strong>Ad ve soyadınız</strong>{' '}doğrulama tamamlanır tamamlanmaz kalıcı olarak
             saklanmaz (bkz. &ldquo;İşlenen Kişisel Veriler&rdquo;).</p>
           {smsAcik && (
             <p><strong>Telefon numaranız</strong> (sonuç SMS&rsquo;i için
@@ -293,7 +293,7 @@ export default async function KvkkAydinlatmaSayfasi() {
               </tbody>
             </table>
           </div>
-          <p style={{ fontSize: 13 }}>Bu süreler sistem tarafından <strong>otomatik olarak</strong>
+          <p style={{ fontSize: 13 }}>Bu süreler sistem tarafından <strong>otomatik olarak</strong>{' '}
             uygulanır: düzenli aralıklarla çalışan bir imha görevi, süresi dolan verileri elle
             müdahale gerekmeden siler. &ldquo;Kimlik bağının koparılması&rdquo;, başvurunun sizinle
             ilişkilendirilmesini sağlayan tüm bilgilerin silinmesi demektir; geriye kalan içerik
@@ -301,7 +301,7 @@ export default async function KvkkAydinlatmaSayfasi() {
             Mevzuatta daha uzun bir saklama süresi öngörülen hâller saklıdır.</p>
 
           <h3 style={{ color: 'var(--text-primary)', marginTop: 20 }}>Otomatik Karar Alma</h3>
-          <p>Başvuru metniniz, gönderdiğiniz anda <strong>otomatik bir içerik filtresinden</strong>
+          <p>Başvuru metniniz, gönderdiğiniz anda <strong>otomatik bir içerik filtresinden</strong>{' '}
             geçirilir; hakaret/uygunsuz ifade tespit edilirse başvuru yayıma alınmadan önce bir
             kişinin incelemesine düşer (bkz. &ldquo;Aktarım&rdquo; — içerik moderasyonu). Ayrıca
             mükerrer başvuruları sınırlayan otomatik bir kural işletilir.</p>
@@ -321,7 +321,7 @@ export default async function KvkkAydinlatmaSayfasi() {
             silinmesini isteme, işlemeye itiraz etme ve Kanun&rsquo;da sayılan diğer haklarınızı
             kullanabilirsiniz. Bu taleplerinizi, veri sorumlusu <strong>{veriSorumlusu}</strong>&rsquo;ne
             &ldquo;Kişisel Verilerin Korunması Kanunu Kapsamında Bilgi Talebi&rdquo; açıklamasıyla
-            iletebilirsiniz. Başvurunuz en geç <strong>30 gün</strong> içinde sonuçlandırılır.
+            iletebilirsiniz. Başvurunuz en geç <strong>30 gün</strong>{' '}içinde sonuçlandırılır.
             Talebinizin reddi veya cevapsız kalması hâlinde Kişisel Verileri Koruma Kurulu&rsquo;na
             şikâyette bulunma hakkınız saklıdır.</p>
           {/*
@@ -355,16 +355,18 @@ export default async function KvkkAydinlatmaSayfasi() {
           )}
 
           {/*
-            v13: AYDINLATMA ile AÇIK RIZA formda TEK kutuda birleşikti. Kurul'un yerleşik
-            görüşü ikisinin ayrı ayrı alınmasıdır; birleşik kutu, açık rızayı sakatlama
-            riski taşır — burada açık rıza yurt dışı aktarımın TEK hukuki dayanağı olduğu
-            için bu risk doğrudan aktarımı dayanaksız bırakırdı. Form artık iki kutu gösterir.
+            v19: form v17'den beri TEK onay kutusu gösteriyor; bu paragraf ise v13'ten
+            kalma "iki ayrı onay" metniyle duruyordu — yani aydınlatma metni kendi
+            formunu YANLIŞ anlatıyordu. BU PARAGRAF FORMUN AYNASIDIR: KimlikAdimi.js'teki
+            kutu sayısı/metni değişirse burası da değişmeli ve sürüm artmalı. Tek kutuya
+            inmenin gerekçesi ve taşıdığı risk: constants.js → KvkkSabitleri (v17 notu).
           */}
           <p style={{ marginTop: 20, fontSize: 13, color: 'var(--text-muted)' }}>
-            Başvuru formunda size <strong>iki ayrı onay</strong> sunulur: birincisiyle bu Aydınlatma
-            Metni&rsquo;ni okuduğunuzu beyan edersiniz; ikincisiyle, verilerinizin yukarıda
-            açıklanan biçimde <strong>yurt dışına aktarılmasına açık rıza</strong> vermiş olursunuz.
-            Açık rızanızı dilediğiniz zaman geri alabilirsiniz.
+            Başvuru formunda size <strong>tek bir onay kutusu</strong>{' '}sunulur: bu kutuyu
+            işaretlemekle hem bu Aydınlatma Metni&rsquo;ni okuduğunuzu ve anladığınızı beyan
+            etmiş, hem de verilerinizin yukarıda açıklanan biçimde <strong>yurt dışına
+            aktarılmasına açık rıza</strong> vermiş olursunuz. Açık rızanızı dilediğiniz zaman
+            geri alabilirsiniz.
           </p>
         </div>
       </div>
